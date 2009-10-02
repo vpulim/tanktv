@@ -24,8 +24,6 @@ class Application : public EventListener
 {
  private:
   Renderer *m_renderer;
-  double m_x, m_y;
-  Widget *m_widget;
   Stack m_stack;
 
  protected:

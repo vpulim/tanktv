@@ -32,12 +32,12 @@ const Box &Widget::box()
   return m_box;
 }
 
-void Widget::move(double x, double y)
+void Widget::move(int x, int y)
 {
   m_box.move(x,y);
 }
 
-void Widget::resize(double w, double h)
+void Widget::resize(int w, int h)
 {
   m_box.resize(w,h);
 }
@@ -62,14 +62,14 @@ void Widget::paint()
 {
   debug("in Widget::paint()\n");
   Renderer *r = m_app->renderer();
-  r->color(0.0, 0.0, 0.5, 1.0);
+  r->color(0, 0, 0x8f, 0xff);
   r->rect(m_box.x, m_box.y, m_box.w, m_box.h);
   r->flip();
 }
 
-double Widget::screen_x()
+int Widget::screen_x()
 {
-  double x = 0.0;
+  int x = 0;
   Widget *w = this;
   while (w) {
     x += w->m_box.x;
@@ -78,9 +78,9 @@ double Widget::screen_x()
   return x;
 }
 
-double Widget::screen_y()
+int Widget::screen_y()
 {
-  double y = 0.0;
+  int y = 0;
   Widget *w = this;
   while (w) {
     y += w->m_box.y;

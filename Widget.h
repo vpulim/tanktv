@@ -16,8 +16,8 @@ class Widget : public EventListener
   bool m_dirty;
 
  protected:
-  double screen_x();
-  double screen_y();
+  int screen_x();
+  int screen_y();
 
  public:
   Widget(Widget *parent);
@@ -27,8 +27,8 @@ class Widget : public EventListener
   virtual bool handleEvent(Event &event);
   virtual bool handleIdle();
   virtual void paint();
-  virtual void move(double x, double y);
-  virtual void resize(double w, double h);
+  virtual void move(int x, int y);
+  virtual void resize(int w, int h);
   virtual const Box &box();
   virtual void setBox(const Box &box);
   virtual const char *label();

@@ -17,7 +17,7 @@ void MainMenu::m_cb(Menu *menu, MenuItem *menuItem)
     Renderer *r = menu->application()->renderer();
     debug("in MainMenu::m_cb\n");
     switch (menuItem->index()) {
-    case 0:
+    case 4:
       r->execute();
       break;
     case 5: 

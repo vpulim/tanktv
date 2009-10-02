@@ -3,7 +3,6 @@
 
 #include "config.h"
 #include <directfb.h>
-#include <cairo-directfb.h>
 #include <map>
 #include "Event.h"
 
@@ -19,7 +18,8 @@
 
 using namespace std;
 
-typedef map<const char *, cairo_surface_t *> image_map;
+typedef map<const char *, IDirectFBSurface *> image_map;
+typedef map<const char *, IDirectFBFont *> font_map;
 
 class Renderer
 {
@@ -30,12 +30,10 @@ class Renderer
   IDirectFBSurface *m_surface;
   IDirectFBEventBuffer *m_eventBuffer;
   IDirectFBInputDevice *m_input;
-  IDirectFBFont *m_font;
-  cairo_surface_t* m_cairoSurface;
-  cairo_t *m_cairo;
   int m_width;
   int m_height;
   image_map m_image_cache;
+  font_map m_font_cache;
 
  private:
   void init();
@@ -49,11 +47,11 @@ class Renderer
   int width() { return m_width; }
   int height() { return m_height; }
   void loop(EventListener *listener);
-  void color(double r, double g, double b, double alpha);
-  void rect(double x, double y, double w, double h);
-  void image(double x, double y, const char *path);
-  void font(const char *face, double size = 32, int style = FONT_NORMAL);
-  void text(double x, double y, const char *str);
+  void color(unsigned char r, unsigned char g, unsigned char b, unsigned char alpha);
+  void rect(int x, int y, int w, int h);
+  void image(int x, int y, const char *path);
+  void font(const char *path, int size = 32);
+  void text(int x, int y, const char *str);
   void flip();
   void execute();
 };

@@ -1,8 +1,8 @@
 ifeq ($(CXX), cc)
 CXX=g++
 endif
-CFLAGS=`pkg-config directfb pixman-1 fontconfig cairo --cflags`
-LDFLAGS=`pkg-config directfb pixman-1 fontconfig cairo --libs` -lpng12 -lfreetype -lz -lxml2
+CFLAGS=`pkg-config directfb --cflags`
+LDFLAGS=`pkg-config directfb --libs`
 
 SOURCES = Main.cpp \
 	Application.cpp \

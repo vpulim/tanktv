@@ -7,19 +7,19 @@ Box::Box()
   resize(200,200);
 }
 
-Box::Box(double x, double y, double w, double h)
+Box::Box(int x, int y, int w, int h)
 {
   move(x,y);
   resize(w,h);
 }
 
-void Box::move(double _x, double _y)
+void Box::move(int _x, int _y)
 {
   x = _x;
   y = _y;
 }
 
-void Box::resize(double _w, double _h)
+void Box::resize(int _w, int _h)
 {
   w = _w;
   h = _h;

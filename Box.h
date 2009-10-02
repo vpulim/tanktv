@@ -4,17 +4,17 @@
 class Box 
 {
  public:
-  double x;
-  double y;
-  double w;
-  double h;
+  int x;
+  int y;
+  int w;
+  int h;
 
  public:
   Box();
-  Box(double x, double y, double w, double h);
+  Box(int x, int y, int w, int h);
   Box & operator= (const Box &other);
-  void move(double x, double y);
-  void resize(double w, double h);
+  void move(int x, int y);
+  void resize(int w, int h);
   void clip(const Box &box);
 };
 

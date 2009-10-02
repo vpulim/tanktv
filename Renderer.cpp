@@ -19,10 +19,6 @@ Renderer::Renderer(int argc, char **argv)
 
 Renderer::~Renderer()
 {
-  for (image_map::const_iterator i=m_image_cache.begin(); i != m_image_cache.end(); i++) {
-    if (i->second) cairo_surface_destroy(i->second);
-  }
-
   if (m_initialized) destroy();
 }
 
@@ -31,7 +27,6 @@ void Renderer::init()
   if (m_initialized) return;
 
   DFBSurfaceDescription dsc;
-  DFBFontDescription font_dsc;
   
   if (DirectFBCreate (&m_dfb) != DFB_OK) {
     fprintf(stderr, "Error in DirectFBCreate!\n"); return;
@@ -63,21 +58,7 @@ void Renderer::init()
     fprintf(stderr, "Error in CreateEventBuffer!\n"); return;    
   }
 
-  font_dsc.flags = DFDESC_HEIGHT;
-  font_dsc.height = 32;
-  if (m_dfb->CreateFont(m_dfb, "fonts/LucidaSansDemiboldRoman.ttf", &font_dsc, &m_font) != DFB_OK) {
-    fprintf(stderr, "Error in CreateFont!\n"); return;    
-  }
-
-  if (m_surface->SetFont(m_surface, m_font) != DFB_OK) {
-    fprintf(stderr, "Error in SetFont!\n"); return;    
-  }
-
-  m_cairoSurface = cairo_directfb_surface_create(m_dfb, m_surface);
-  m_cairo = cairo_create(m_cairoSurface);
-  cairo_set_tolerance(m_cairo, 1);
-  cairo_set_operator(m_cairo, CAIRO_OPERATOR_OVER);
-  color(0,0,0,1);
+  color(0,0,0,0xff);
   rect(0,0,m_width, m_height);
 
   m_exit = false;
@@ -88,10 +69,16 @@ void Renderer::destroy()
 {
   if (!m_initialized) return;
 
-  cairo_destroy(m_cairo);
-  cairo_surface_destroy(m_cairoSurface);
+  for (image_map::const_iterator i=m_image_cache.begin(); i != m_image_cache.end(); i++) {
+    if (i->second) i->second->Release(i->second);    
+  }
+  m_image_cache.clear();
 
-  m_font->Release(m_font);
+  for (font_map::const_iterator i=m_font_cache.begin(); i != m_font_cache.end(); i++) {
+    if (i->second) i->second->Release(i->second);    
+  }
+  m_font_cache.clear();
+
   m_input->Release(m_input);
   m_surface->Release(m_surface);
   m_dfb->Release (m_dfb);
@@ -117,60 +104,57 @@ void Renderer::loop(EventListener *listener)
   }    
 }
  
-void Renderer::color(double r, double g, double b, double alpha)
+void Renderer::color(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
-  cairo_set_source_rgba(m_cairo, r, g, b, alpha);
+  m_surface->SetColor(m_surface, r & 0xff, g & 0xff, b & 0xff, a & 0xff);
 }
 
-void Renderer::rect(double x, double y, double w, double h)
+void Renderer::rect(int x, int y, int w, int h)
 {
-  cairo_rectangle(m_cairo, x, y, w, h);
-  cairo_fill(m_cairo);  
+  m_surface->FillRectangle(m_surface, x, y, w, h);
 }
 
-void Renderer::image(double x, double y, const char *path) 
+void Renderer::image(int x, int y, const char *path) 
 {
-  cairo_surface_t *surface;
-  cairo_status_t status;
+  IDirectFBSurface *image = NULL;
+  DFBSurfaceDescription dsc;
 
   if (m_image_cache.find(path) == m_image_cache.end()) {
-    surface = cairo_image_surface_create_from_png(path);
-    status =cairo_surface_status(surface);
-    printf("%d\n", status);
-    if (status == CAIRO_STATUS_NO_MEMORY ||
-	status == CAIRO_STATUS_FILE_NOT_FOUND ||
-	status == CAIRO_STATUS_READ_ERROR) 
-      surface = NULL;
-    m_image_cache[path] = surface;
+    IDirectFBImageProvider *provider = NULL;
+    if (m_dfb->CreateImageProvider (m_dfb, path, &provider) == DFB_OK) {
+      if (provider->GetSurfaceDescription(provider, &dsc) == DFB_OK) {
+	if (m_dfb->CreateSurface(m_dfb, &dsc, &image) == DFB_OK) {
+	  provider->RenderTo(provider, image, NULL);
+	}
+      }
+      if (provider) provider->Release(provider);
+    }
+    m_image_cache[path] = image;
   }
-  surface = m_image_cache[path];
-  if (surface) {
-    double w = cairo_image_surface_get_width(surface);
-    double h = cairo_image_surface_get_height(surface);
-    cairo_set_source_surface(m_cairo, surface, x, y);
-    cairo_rectangle(m_cairo, x, y, w, h);
-    cairo_fill(m_cairo);  
+  image = m_image_cache[path];
+  if (image) {
+    m_surface->Blit(m_surface, image, NULL, x, y);
   }
 }
 
-void Renderer::font(const char *face, double size, int style)
+void Renderer::font(const char *path, int size)
 {
-  /*
-  if (style == FONT_BOLD)
-    cairo_select_font_face(m_cairo, face, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-  else
-    cairo_select_font_face(m_cairo, face, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-  cairo_set_font_size(m_cairo, size);
-  */
+  DFBFontDescription dsc;
+  IDirectFBFont *font = NULL;
+
+  if (m_font_cache.find(path) == m_font_cache.end()) {
+    dsc.flags = DFDESC_HEIGHT;
+    dsc.height = size;
+    m_dfb->CreateFont(m_dfb, path, &dsc, &font);
+    m_font_cache[path] = font;    
+  }
+  font = m_font_cache[path];
+  if (font)
+    m_surface->SetFont(m_surface, font);
 }
 
-void Renderer::text(double x, double y, const char *str)
+void Renderer::text(int x, int y, const char *str)
 {
-  /*
-  cairo_move_to(m_cairo, x, y);
-  cairo_show_text(m_cairo, str);
-  */
-  m_surface->SetColor(m_surface, 0xff, 0xff, 0xff, 0xFF);
   m_surface->DrawString(m_surface, str, -1, (int)x, (int)y, DSTF_LEFT);
 }
 

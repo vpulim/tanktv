@@ -21,11 +21,11 @@ void MenuItem::select()
 void MenuItem::paint()
 {
   if (m_app) {
-    double x = screen_x();
-    double y = screen_y();
+    int x = screen_x();
+    int y = screen_y();
     Renderer *r = m_app->renderer();
 
-    r->color(1, 1, 1, 1);
+    r->color(0xff, 0xff, 0xff, 0xff);
     r->text(x, y + 37, m_label);  
   }
 }
@@ -86,13 +86,13 @@ void Menu::paint()
   debug("in Main::paint\n");
   debug("m_current = %d\n", m_current);
 
-
   if (m_current > -1) {
     int start = 0, end = 0;
-    double x = 675, y, top = 150, height = m_menuitems[0]->box().h;
+    int x = 675, y, top = 150, height = m_menuitems[0]->box().h;
     Renderer *r = m_app->renderer();
 
-    r->color(0, 0, 0, 1.0);
+    r->font("fonts/LucidaSansDemiboldRoman.ttf", 32);
+    r->color(0, 0, 0, 0xff);
     r->rect(640, 0, 640, 720);
 
     if (m_current > m_size - 6) {
