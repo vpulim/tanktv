@@ -1,14 +1,19 @@
-#include <stdio.h>
 #include "Application.h"
-#include "MenuItem.h"
 
 Application::Application(Renderer *renderer)
   : m_renderer(renderer)
 {
-  m_x = 200;
-  m_y = 0;
-  m_widget = new MenuItem(0);
-  m_widget->setRenderer(renderer);
+}
+
+void Application::setScreen(Screen *screen) 
+{
+  while (m_stack.top()) {
+    delete m_stack.pop();
+  }
+  m_stack.push(screen);
+  if (m_renderer->initialized()) {
+    screen->paint();
+  }
 }
 
 void Application::run()
@@ -18,28 +23,60 @@ void Application::run()
   }
 }
 
+Renderer *Application::renderer()
+{
+  return m_renderer;
+}
+
 bool Application::handleEvent(Event &event)
 {
   switch (event.key) {
   case KEY_STOP:
     return false;
   }
+
+  Screen *screen = m_stack.top();
+
+  if (screen) {
+    screen->handleEvent(event);
+    screen = m_stack.top();
+    if (screen && screen->dirty()) screen->paint();
+  }
+
   return true;
 }
 
 bool Application::handleIdle()
 {
-  Box box;
-  m_renderer->color(0,0,0,1);
-  box = m_widget->box();
-  box.move(box.x, box.y-20);
-  box.resize(box.w+40, box.h+40);
-  m_renderer->rect(box);
-  
-  m_y += 10;
-  if (m_y > 800) m_y = 0;
-  m_widget->move(m_x, m_y);
-  m_widget->draw();
-  m_renderer->flip();
   return true;
 }
+
+Stack::Stack()
+{
+  m_top = -1;
+}
+
+bool Stack::push(Screen *screen)
+{
+  if (m_top < MAX_STACK_SIZE-1) {
+    m_screens[++m_top] = screen;
+    return true;
+  }
+  return false;
+}
+
+Screen *Stack::pop() 
+{
+  if (m_top >= 0) {
+    return m_screens[m_top--];
+  }
+  return NULL;
+}
+
+Screen *Stack::top() {
+  if (m_top > -1) {
+    return m_screens[m_top];
+  }
+  return NULL;
+}
+

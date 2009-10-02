@@ -1,22 +1,30 @@
 #include <string.h>
 #include "Widget.h"
+#include "Application.h"
 
 Widget::Widget(Widget *parent)
   : m_parent(parent),
-    m_renderer(0)
+    m_app(0),
+    m_dirty(true)
 {
   if (parent) {
     m_box = parent->box();
-    m_renderer = parent->m_renderer;
+    m_app = parent->m_app;
   }
   else {
     m_box = Box(0, 0, 200, 200);
   }
 }
 
-void Widget::setRenderer(Renderer *renderer)
+bool Widget::handleEvent(Event &event)
 {
-  m_renderer = renderer;
+  debug("in Widget::handleEvent()\n");
+  return true;
+}
+
+bool Widget::handleIdle() 
+{
+  return true;
 }
 
 const Box &Widget::box() 
@@ -48,4 +56,35 @@ void Widget::setLabel(const char *label)
 const char *Widget::label()
 {
   return m_label;
+}
+
+void Widget::paint()
+{
+  debug("in Widget::paint()\n");
+  Renderer *r = m_app->renderer();
+  r->color(0.0, 0.0, 0.5, 1.0);
+  r->rect(m_box.x, m_box.y, m_box.w, m_box.h);
+  r->flip();
+}
+
+double Widget::screen_x()
+{
+  double x = 0.0;
+  Widget *w = this;
+  while (w) {
+    x += w->m_box.x;
+    w = w->m_parent;
+  }
+  return x;
+}
+
+double Widget::screen_y()
+{
+  double y = 0.0;
+  Widget *w = this;
+  while (w) {
+    y += w->m_box.y;
+    w = w->m_parent;
+  }
+  return y;
 }

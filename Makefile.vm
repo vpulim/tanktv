@@ -1,0 +1,29 @@
+ifeq ($(CXX), cc)
+CXX=g++
+endif
+CFLAGS=`pkg-config directfb pixman-1 fontconfig cairo --cflags`
+LDFLAGS=`pkg-config directfb pixman-1 fontconfig cairo --libs` -lpng12 -lfreetype -lz -lxml2
+
+SOURCES = Main.cpp \
+	Application.cpp \
+	Renderer.cpp \
+	Box.cpp \
+	Widget.cpp \
+	Screen.cpp \
+	Menu.cpp \
+	MainMenu.cpp 
+
+OBJECTS = $(SOURCES:.cpp=.o)
+APP = nmti
+
+all: $(SOURCES) $(APP)
+
+$(APP): $(OBJECTS)
+	$(CXX) $(LDFLAGS) $(OBJECTS) -o $@
+
+.cpp.o:
+	cat config.in > config.h
+	$(CXX) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(APP) *~
