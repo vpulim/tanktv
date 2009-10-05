@@ -30,11 +30,6 @@ Renderer *Application::renderer()
 
 bool Application::handleEvent(Event &event)
 {
-  switch (event.key) {
-  case KEY_STOP:
-    return false;
-  }
-
   Screen *screen = m_stack.top();
 
   if (screen) {

@@ -22,6 +22,12 @@ Renderer::~Renderer()
   if (m_initialized) destroy();
 }
 
+void *mainf(DirectThread *thread, void *arg)
+{
+  debug("in thread\n");
+  return NULL;
+}
+
 void Renderer::init()
 {
   if (m_initialized) return;
@@ -58,6 +64,8 @@ void Renderer::init()
     fprintf(stderr, "Error in CreateEventBuffer!\n"); return;    
   }
 
+  m_thread = direct_thread_create(DTT_DEFAULT, mainf, NULL, "main");
+
   color(0,0,0,0xff);
   rect(0,0,m_width, m_height);
 
@@ -68,6 +76,9 @@ void Renderer::init()
 void Renderer::destroy()
 {
   if (!m_initialized) return;
+
+  direct_thread_join(m_thread);
+  direct_thread_destroy(m_thread);
 
   for (image_map::const_iterator i=m_image_cache.begin(); i != m_image_cache.end(); i++) {
     if (i->second) i->second->Release(i->second);    
@@ -114,26 +125,41 @@ void Renderer::rect(int x, int y, int w, int h)
   m_surface->FillRectangle(m_surface, x, y, w, h);
 }
 
-void Renderer::image(int x, int y, const char *path) 
+void Renderer::image(int x, int y, const char *path, bool blend) 
 {
+  debug("drawing: %s\n", path);
+
   IDirectFBSurface *image = NULL;
-  DFBSurfaceDescription dsc;
+  DFBSurfaceDescription sdsc;
+  DFBImageDescription idsc;
 
   if (m_image_cache.find(path) == m_image_cache.end()) {
     IDirectFBImageProvider *provider = NULL;
     if (m_dfb->CreateImageProvider (m_dfb, path, &provider) == DFB_OK) {
-      if (provider->GetSurfaceDescription(provider, &dsc) == DFB_OK) {
-	if (m_dfb->CreateSurface(m_dfb, &dsc, &image) == DFB_OK) {
+      if (provider->GetSurfaceDescription(provider, &sdsc) == DFB_OK &&
+	  provider->GetImageDescription(provider, &idsc) == DFB_OK) {
+	if (m_dfb->CreateSurface(m_dfb, &sdsc, &image) == DFB_OK) {
 	  provider->RenderTo(provider, image, NULL);
 	}
+	else {
+	  debug("CreateSurface failed\n");
+	}
+      }
+      else {
+	debug("GetSurfaceDescription failed\n");
       }
       if (provider) provider->Release(provider);
+    }
+    else {
+      debug("CreateImageProvider failed\n");
     }
     m_image_cache[path] = image;
   }
   image = m_image_cache[path];
   if (image) {
+    if (blend) m_surface->SetBlittingFlags(m_surface, DSBLIT_BLEND_ALPHACHANNEL);
     m_surface->Blit(m_surface, image, NULL, x, y);
+    if (blend) m_surface->SetBlittingFlags(m_surface, DSBLIT_NOFX);
   }
 }
 
@@ -168,12 +194,14 @@ void Renderer::execute()
   int status;
   pid_t pid;
 
-  destroy();
+  //  destroy();
+  m_dfb->Suspend(m_dfb);
   if ((pid = fork()) == -1)
     perror("couldn't fork");
   else if (pid == 0)
     execl("/bin/mono", "/bin/mono", "-single", "-nogui", "-dram", "1", "sample.mkv", NULL);
   else if ((pid = wait(&status)) == -1)
     perror("wait error");
-  init();
+  //  init();
+  m_dfb->Resume(m_dfb);
 }

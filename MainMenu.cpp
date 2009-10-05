@@ -3,11 +3,11 @@
 MainMenu::MainMenu(Application *application)
   : Menu(application)
 {
-  add(new MenuItem("Movies", m_cb));
-  add(new MenuItem("TV Shows", m_cb));
-  add(new MenuItem("Music", m_cb));
-  add(new MenuItem("Downloads", m_cb));
-  add(new MenuItem("Settings", m_cb));
+  add(new ArrowMenuItem("Movies", m_cb, "images/movies.png"));
+  add(new ArrowMenuItem("TV Shows", m_cb, "images/tvshows.png"));
+  add(new ArrowMenuItem("Music", m_cb, "images/music.png"));
+  add(new ArrowMenuItem("Downloads", m_cb, "images/movies.png"));
+  add(new ArrowMenuItem("Settings", m_cb, "images/settings.png"));
   add(new MenuItem("Exit", m_cb));
 }
 

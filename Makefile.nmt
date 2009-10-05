@@ -11,6 +11,7 @@ SOURCES = Main.cpp \
 	Widget.cpp \
 	Screen.cpp \
 	Menu.cpp \
+	MenuItem.cpp \
 	MainMenu.cpp 
 
 OBJECTS = $(SOURCES:.cpp=.o)

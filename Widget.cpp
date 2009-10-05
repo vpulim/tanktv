@@ -8,12 +8,10 @@ Widget::Widget(Widget *parent)
     m_dirty(true)
 {
   if (parent) {
-    m_box = parent->box();
     m_app = parent->m_app;
   }
-  else {
-    m_box = Box(0, 0, 200, 200);
-  }
+  move(0,0);
+  resize(200,200);
 }
 
 bool Widget::handleEvent(Event &event)
@@ -32,9 +30,21 @@ const Box &Widget::box()
   return m_box;
 }
 
+void Widget::update_screen_xy()
+{
+  m_screen_x = m_screen_y = 0;
+  Widget *w = this;
+  while (w) {
+    m_screen_x += w->m_box.x;
+    m_screen_y += w->m_box.y;
+    w = w->m_parent;
+  }
+}
+
 void Widget::move(int x, int y)
 {
   m_box.move(x,y);
+  update_screen_xy();
 }
 
 void Widget::resize(int w, int h)
@@ -45,6 +55,7 @@ void Widget::resize(int w, int h)
 void Widget::setBox(const Box &box) 
 {
   m_box = box;
+  update_screen_xy();
 }
 
 void Widget::setLabel(const char *label)
@@ -63,28 +74,6 @@ void Widget::paint()
   debug("in Widget::paint()\n");
   Renderer *r = m_app->renderer();
   r->color(0, 0, 0x8f, 0xff);
-  r->rect(m_box.x, m_box.y, m_box.w, m_box.h);
+  r->rect(m_screen_x, m_screen_y, m_box.w, m_box.h);
   r->flip();
-}
-
-int Widget::screen_x()
-{
-  int x = 0;
-  Widget *w = this;
-  while (w) {
-    x += w->m_box.x;
-    w = w->m_parent;
-  }
-  return x;
-}
-
-int Widget::screen_y()
-{
-  int y = 0;
-  Widget *w = this;
-  while (w) {
-    y += w->m_box.y;
-    w = w->m_parent;
-  }
-  return y;
 }

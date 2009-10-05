@@ -2,34 +2,6 @@
 #include "Menu.h"
 #include "Utils.h"
 
-MenuItem::MenuItem(const char *label, MenuItemCallback callback, const void *data)
-  : Widget(NULL),
-    m_cb(callback),
-    m_data(data),
-    m_index(-1)
-{
-  setLabel(label);
-  resize(465, 50);
-}
-
-void MenuItem::select()
-{
-  if (m_cb)
-    m_cb((Menu *)m_parent, this);
-}
-
-void MenuItem::paint()
-{
-  if (m_app) {
-    int x = screen_x();
-    int y = screen_y();
-    Renderer *r = m_app->renderer();
-
-    r->color(0xff, 0xff, 0xff, 0xff);
-    r->text(x, y + 37, m_label);  
-  }
-}
-
 Menu::Menu(Application *application)
   : Screen(application),
     m_size(0),
@@ -88,10 +60,9 @@ void Menu::paint()
 
   if (m_current > -1) {
     int start = 0, end = 0;
-    int x = 675, y, top = 150, height = m_menuitems[0]->box().h;
+    int x = 675, y, top = 200, height = m_menuitems[0]->box().h;
     Renderer *r = m_app->renderer();
 
-    r->font("fonts/LucidaSansDemiboldRoman.ttf", 32);
     r->color(0, 0, 0, 0xff);
     r->rect(640, 0, 640, 720);
 
@@ -103,8 +74,13 @@ void Menu::paint()
     }
     end = min(m_size-1, start + 9);
     
-    r->image(x - 32, top + (m_current - start) * height - 17, "images/menuitem_bg.png");  
+    r->font("fonts/LucidaSansDemiboldRoman.ttf", 28);
+    r->color(0xff, 0xff, 0xff, 0xff);
+    r->text(x + 150, top - 40, "NMT TV");
 
+    r->image(x - 32, top + (m_current - start) * height - 18, "images/menuitem_bg.png");  
+
+    r->font("fonts/LucidaSansDemiboldRoman.ttf", 28);
     for (int i=start; i<=end; i++) {
       MenuItem *mi = m_menuitems[i];
       y = (i - start) * height;

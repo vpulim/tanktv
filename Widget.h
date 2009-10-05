@@ -10,15 +10,16 @@ class Widget : public EventListener
 {
  protected:
   Box m_box;
+  int m_screen_x;
+  int m_screen_y;
   char m_label[MAX_LABEL_LENGTH];
   Widget *m_parent;
   class Application *m_app;
   bool m_dirty;
 
- protected:
-  int screen_x();
-  int screen_y();
-
+ private:
+  void update_screen_xy();
+  
  public:
   Widget(Widget *parent);
   void setDirty(bool flag) { m_dirty = flag; }

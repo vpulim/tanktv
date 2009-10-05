@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include <directfb.h>
+#include <direct/thread.h>
 #include <map>
 #include "Event.h"
 
@@ -34,6 +35,7 @@ class Renderer
   int m_height;
   image_map m_image_cache;
   font_map m_font_cache;
+  DirectThread *m_thread;
 
  private:
   void init();
@@ -49,7 +51,7 @@ class Renderer
   void loop(EventListener *listener);
   void color(unsigned char r, unsigned char g, unsigned char b, unsigned char alpha);
   void rect(int x, int y, int w, int h);
-  void image(int x, int y, const char *path);
+  void image(int x, int y, const char *path, bool blend = false);
   void font(const char *path, int size = 32);
   void text(int x, int y, const char *str);
   void flip();
