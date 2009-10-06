@@ -18,6 +18,7 @@ class Stack
   bool push(Screen *screen);
   Screen *pop();
   Screen *top();
+  int size() { return m_top + 1; }
 };
 
 class Application : public EventListener
@@ -33,6 +34,8 @@ class Application : public EventListener
  public: 
   Application(Renderer *renderer);
   void setScreen(Screen *screen);
+  void go(Screen *screen) { m_stack.push(screen); }
+  void back() { if (m_stack.size() > 1) delete m_stack.pop(); }
   void run();
   Renderer *renderer();
 };

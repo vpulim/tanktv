@@ -10,10 +10,10 @@ typedef enum {
 
 typedef enum {
 #ifdef NMT
-  KEY_STOP = DIKS_STOP,
+  KEY_BACK = DIKS_RETURN,
   KEY_ENTER = DIKS_SELECT,
 #else
-  KEY_STOP = DIKS_ESCAPE,
+  KEY_BACK = DIKS_ESCAPE,
   KEY_ENTER = DIKS_RETURN,
 #endif
   KEY_UP = DIKS_CURSOR_UP,

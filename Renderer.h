@@ -3,7 +3,6 @@
 
 #include "config.h"
 #include <directfb.h>
-#include <direct/thread.h>
 #include <map>
 #include "Event.h"
 
@@ -20,7 +19,7 @@
 using namespace std;
 
 typedef map<const char *, IDirectFBSurface *> image_map;
-typedef map<const char *, IDirectFBFont *> font_map;
+typedef map<unsigned, IDirectFBFont *> font_map;
 
 class Renderer
 {
@@ -35,7 +34,6 @@ class Renderer
   int m_height;
   image_map m_image_cache;
   font_map m_font_cache;
-  DirectThread *m_thread;
 
  private:
   void init();
@@ -51,11 +49,12 @@ class Renderer
   void loop(EventListener *listener);
   void color(unsigned char r, unsigned char g, unsigned char b, unsigned char alpha);
   void rect(int x, int y, int w, int h);
+  void line(int x1, int y1, int x2, int y2, bool blend = false);
   void image(int x, int y, const char *path, bool blend = false);
   void font(const char *path, int size = 32);
-  void text(int x, int y, const char *str);
+  void text(int x, int y, const char *str, int max_width = 0);
   void flip();
-  void execute();
+  void play(const char *file);
 };
 
 #endif

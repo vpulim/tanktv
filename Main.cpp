@@ -1,5 +1,5 @@
 #include "Application.h"
-#include "MainMenu.h"
+#include "Menu.h"
 
 int main(int argc, char **argv)
 {

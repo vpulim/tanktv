@@ -32,7 +32,7 @@ void MenuItem::paint()
     Renderer *r = m_app->renderer();
 
     r->color(0xff, 0xff, 0xff, 0xff);
-    r->text(m_screen_x, m_screen_y + 35, m_label);
+    r->text(m_screen_x, m_screen_y + 35, m_label, 445);
     if (hasFocus()) {
       if (*m_image) {
 	r->image(0, 0, m_image);

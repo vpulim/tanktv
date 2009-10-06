@@ -5,6 +5,8 @@ CFLAGS=`pkg-config directfb direct --cflags`
 LDFLAGS=`pkg-config directfb direct --libs` 
 
 SOURCES = Main.cpp \
+	Utils.cpp \
+	File.cpp \
 	Application.cpp \
 	Renderer.cpp \
 	Box.cpp \
@@ -12,7 +14,8 @@ SOURCES = Main.cpp \
 	Screen.cpp \
 	Menu.cpp \
 	MenuItem.cpp \
-	MainMenu.cpp 
+	MainMenu.cpp \
+	MoviesMenu.cpp 
 
 OBJECTS = $(SOURCES:.cpp=.o)
 APP = nmti

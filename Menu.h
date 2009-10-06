@@ -3,6 +3,7 @@
 
 #include "Screen.h"
 #include "Application.h"
+#include <vector>
 
 #define MAX_MENU_ITEMS 1000
 
@@ -17,9 +18,10 @@ class Menu : public Screen
   MenuItem *m_menuitems[MAX_MENU_ITEMS];
   int m_size;
   int m_current;
+  int m_top;
 
  public:
-  Menu(Application *application);
+  Menu(Application *application, const char *title);
   ~Menu();
   int current() { return m_current; }
   void add(MenuItem *menuItem);
@@ -28,5 +30,25 @@ class Menu : public Screen
 };
 
 #include "MenuItem.h"
+
+class MainMenu : public Menu
+{
+ private:
+  static void m_cb(Menu *menu, MenuItem *menuItem);
+
+ public:
+  MainMenu(Application *application);
+};
+
+class MoviesMenu : public Menu
+{
+ private:
+  std::vector<class File> m_files;
+  static void m_cb(Menu *menu, MenuItem *menuItem);
+
+ public:
+  MoviesMenu(Application *application);
+  ~MoviesMenu();
+};
 
 #endif

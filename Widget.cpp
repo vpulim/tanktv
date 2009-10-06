@@ -12,6 +12,7 @@ Widget::Widget(Widget *parent)
   }
   move(0,0);
   resize(200,200);
+  setLabel("");
 }
 
 bool Widget::handleEvent(Event &event)

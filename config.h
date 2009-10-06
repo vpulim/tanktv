@@ -14,3 +14,4 @@
 
 #endif
 
+#define NMT 1

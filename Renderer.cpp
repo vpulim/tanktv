@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "Renderer.h"
+#include "Utils.h"
 
 Renderer::Renderer(int argc, char **argv)
   : m_initialized(false),
@@ -20,12 +21,6 @@ Renderer::Renderer(int argc, char **argv)
 Renderer::~Renderer()
 {
   if (m_initialized) destroy();
-}
-
-void *mainf(DirectThread *thread, void *arg)
-{
-  debug("in thread\n");
-  return NULL;
 }
 
 void Renderer::init()
@@ -64,8 +59,6 @@ void Renderer::init()
     fprintf(stderr, "Error in CreateEventBuffer!\n"); return;    
   }
 
-  m_thread = direct_thread_create(DTT_DEFAULT, mainf, NULL, "main");
-
   color(0,0,0,0xff);
   rect(0,0,m_width, m_height);
 
@@ -76,9 +69,6 @@ void Renderer::init()
 void Renderer::destroy()
 {
   if (!m_initialized) return;
-
-  direct_thread_join(m_thread);
-  direct_thread_destroy(m_thread);
 
   for (image_map::const_iterator i=m_image_cache.begin(); i != m_image_cache.end(); i++) {
     if (i->second) i->second->Release(i->second);    
@@ -107,7 +97,7 @@ void Renderer::loop(EventListener *listener)
       if (dfb_event.type == DIET_KEYPRESS) {
 	event.type = EVENT_KEYPRESS;
 	event.key = (Key)dfb_event.key_symbol;
-	debug("got key: 0x%x\n", (int)event.key - 61440);
+	debug("got key: 0x%x 0x%x\n", (int)(event.key & 0xFF00), (int)(event.key & 0xFF));
 	if (!listener->handleEvent(event)) m_exit = true;
       }
     }
@@ -123,6 +113,13 @@ void Renderer::color(unsigned char r, unsigned char g, unsigned char b, unsigned
 void Renderer::rect(int x, int y, int w, int h)
 {
   m_surface->FillRectangle(m_surface, x, y, w, h);
+}
+
+void Renderer::line(int x1, int y1, int x2, int y2, bool blend)
+{
+  if (blend) m_surface->SetDrawingFlags(m_surface, DSDRAW_BLEND);
+  m_surface->DrawLine(m_surface, x1, y1, x2, y2);
+  if (blend) m_surface->SetDrawingFlags(m_surface, DSDRAW_NOFX);
 }
 
 void Renderer::image(int x, int y, const char *path, bool blend) 
@@ -165,23 +162,39 @@ void Renderer::image(int x, int y, const char *path, bool blend)
 
 void Renderer::font(const char *path, int size)
 {
+  if (!path || !path[0]) return;
+
   DFBFontDescription dsc;
   IDirectFBFont *font = NULL;
+  unsigned key = hash(path) + size;
 
-  if (m_font_cache.find(path) == m_font_cache.end()) {
+  if (m_font_cache.find(key) == m_font_cache.end()) {
     dsc.flags = DFDESC_HEIGHT;
     dsc.height = size;
     m_dfb->CreateFont(m_dfb, path, &dsc, &font);
-    m_font_cache[path] = font;    
+    m_font_cache[key] = font;    
   }
-  font = m_font_cache[path];
+  font = m_font_cache[key];
   if (font)
     m_surface->SetFont(m_surface, font);
 }
 
-void Renderer::text(int x, int y, const char *str)
+void Renderer::text(int x, int y, const char *str, int max_width)
 {
+  DFBRegion clip, textclip;
+
+  if (max_width) {
+    m_surface->GetClip(m_surface, &clip);
+    textclip.x1 = clip.x1;
+    textclip.y1 = clip.y1;
+    textclip.x2 = x + max_width;
+    textclip.y2 = clip.y2;
+    m_surface->SetClip(m_surface, &textclip);
+  }
   m_surface->DrawString(m_surface, str, -1, (int)x, (int)y, DSTF_LEFT);
+  if (max_width) {
+    m_surface->SetClip(m_surface, &clip);
+  }
 }
 
 void Renderer::flip()
@@ -189,19 +202,21 @@ void Renderer::flip()
   m_surface->Flip(m_surface, NULL, DSFLIP_WAITFORSYNC);
 }
 
-void Renderer::execute()
+void Renderer::play(const char *file)
 {
+  if (!file || !file[0]) return;
+
   int status;
   pid_t pid;
 
-  //  destroy();
-  m_dfb->Suspend(m_dfb);
+  destroy();
+  //m_dfb->Suspend(m_dfb);
   if ((pid = fork()) == -1)
     perror("couldn't fork");
   else if (pid == 0)
-    execl("/bin/mono", "/bin/mono", "-single", "-nogui", "-dram", "1", "sample.mkv", NULL);
+    execl("/bin/mono", "/bin/mono", "-single", "-nogui", "-dram", "1", file, NULL);
   else if ((pid = wait(&status)) == -1)
     perror("wait error");
-  //  init();
-  m_dfb->Resume(m_dfb);
+  init();
+  //m_dfb->Resume(m_dfb);
 }
