@@ -1,0 +1,7 @@
+{
+    appinfo_format="1",
+    name="TankTV",
+    version="0.0.1",
+    enabled="1",
+    daemon_script="daemon.sh"
+}
