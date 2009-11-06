@@ -13,7 +13,7 @@ Menu::Menu(Application *application, const char *title)
 
 Menu::~Menu()
 {
-  for (int i; m_size; i++) {
+  for (int i; i<m_size; i++) {
     delete m_menuitems[i];
   }
 }
@@ -31,7 +31,7 @@ void Menu::add(MenuItem *menuItem)
 
 bool Menu::handleEvent(Event &event)
 {
-  debug("in Main::handleEvent\n");
+  debug("in Menu::handleEvent: %d\n", event.key);
   switch (event.key) {
   case KEY_UP:
     if (m_current > 0) {
@@ -48,6 +48,7 @@ bool Menu::handleEvent(Event &event)
   case KEY_ENTER:
     if (m_current > -1) {
       m_menuitems[m_current]->select();
+      setDirty(true);
     }
     break;
   }
@@ -57,8 +58,7 @@ bool Menu::handleEvent(Event &event)
 
 void Menu::paint()
 {
-  debug("in Main::paint\n");
-  debug("m_current = %d\n", m_current);
+  debug("in Menu::paint\n");
 
   if (m_current > -1) {
     int start = 0, end = 0;
@@ -89,21 +89,13 @@ void Menu::paint()
       mi->move(x, m_top + y);
       mi->paint();
       if (i-start == 0 && start > 0) {
-	for (int j=0; j<50; j++) {
-	  r->color(0, 0, 0, j > 35 ? 0xff : j*7.28);
-	  r->line(x, m_top + y + (49 - j), x + 465, m_top + y + (49 - j), true);
-	}
+	r->image(x - 32, m_top - 18, "images/fade_top.png", true);  
       }
       if (i-start == 9) {
-	for (int j=0; j<50; j++) {
-	  r->color(0, 0, 0, j > 35 ? 0xff : j*7.28);
-	  r->line(x, m_top + y + j, x + 465, m_top + y + j, true);
-	}
+	r->image(x - 32, m_top + y - 18, "images/fade_bot.png", true);  
       }
     }
 
     r->flip();
   }
-
-  setDirty(false);
 }

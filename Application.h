@@ -4,6 +4,7 @@
 #include "Event.h"
 #include "Screen.h"
 #include "Renderer.h"
+#include "Audio.h"
 
 #define MAX_STACK_SIZE 100
 
@@ -25,19 +26,21 @@ class Application : public EventListener
 {
  private:
   Renderer *m_renderer;
+  Audio *m_audio;
   Stack m_stack;
 
  protected:
   bool handleEvent(Event &event);
   bool handleIdle();
-  
+
  public: 
-  Application(Renderer *renderer);
+  Application(Renderer *renderer, Audio *audio);
   void setScreen(Screen *screen);
-  void go(Screen *screen) { m_stack.push(screen); }
-  void back() { if (m_stack.size() > 1) delete m_stack.pop(); }
+  void go(Screen *screen);
+  void back();
   void run();
-  Renderer *renderer();
+  Renderer *renderer() { return m_renderer; }
+  Audio *audio() { return m_audio; }
 };
 
 #endif

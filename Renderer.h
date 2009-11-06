@@ -5,6 +5,7 @@
 #include <directfb.h>
 #include <map>
 #include "Event.h"
+#include "ImageLoader.h"
 
 #define IMAGE_CACHE_SIZE 100
 #ifdef NMT
@@ -16,10 +17,8 @@
 #define FONT_NORMAL 0
 #define FONT_BOLD 1
 
-using namespace std;
-
-typedef map<const char *, IDirectFBSurface *> image_map;
-typedef map<unsigned, IDirectFBFont *> font_map;
+typedef std::map<const char *, IDirectFBSurface *> image_map;
+typedef std::map<unsigned, IDirectFBFont *> font_map;
 
 class Renderer
 {
@@ -32,12 +31,15 @@ class Renderer
   IDirectFBInputDevice *m_input;
   int m_width;
   int m_height;
+  double m_scale;
+  ImageLoader *m_image_loader;
   image_map m_image_cache;
   font_map m_font_cache;
 
  private:
   void init();
   void destroy();
+  void scale(int *x) { *x = (int)(*x * m_scale); }
 
  public:
   Renderer(int argc, char **argv);

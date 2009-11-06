@@ -9,6 +9,7 @@ class Screen : public Widget
 {
  public:
   Screen(Application *application);  
+  virtual ~Screen() {};
 };
 
 #endif

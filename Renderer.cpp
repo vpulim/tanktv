@@ -6,9 +6,14 @@
 #include "Renderer.h"
 #include "Utils.h"
 
+#define VIRTUAL_WIDTH 1280
+#define VIRTUAL_HEIGHT 720
+
 Renderer::Renderer(int argc, char **argv)
   : m_initialized(false),
-    m_exit(false)
+    m_exit(false),
+    m_image_loader(NULL),
+    m_scale(1.5)
 {
   if (DirectFBInit(&argc, &argv) != DFB_OK) {
     fprintf(stderr, "Error in DirectFBInit!\n");
@@ -29,7 +34,7 @@ void Renderer::init()
 
   DFBSurfaceDescription dsc;
   
-  if (DirectFBCreate (&m_dfb) != DFB_OK) {
+  if (DirectFBCreate(&m_dfb) != DFB_OK) {
     fprintf(stderr, "Error in DirectFBCreate!\n"); return;
   }
 
@@ -48,6 +53,9 @@ void Renderer::init()
     fprintf(stderr, "Error in GetSize!\n"); return;
   }
 
+  m_width = VIRTUAL_WIDTH;
+  m_height = VIRTUAL_HEIGHT;
+
   if (m_surface->Flip (m_surface, NULL, DSFLIP_NONE) != DFB_OK) {
     fprintf(stderr, "Error in Flip!\n"); return;
   }
@@ -59,6 +67,11 @@ void Renderer::init()
     fprintf(stderr, "Error in CreateEventBuffer!\n"); return;    
   }
 
+  /*
+  m_image_loader = new ImageLoader();
+  m_image_loader->start();
+  */
+
   color(0,0,0,0xff);
   rect(0,0,m_width, m_height);
 
@@ -69,6 +82,8 @@ void Renderer::init()
 void Renderer::destroy()
 {
   if (!m_initialized) return;
+
+  if (m_image_loader) delete m_image_loader;
 
   for (image_map::const_iterator i=m_image_cache.begin(); i != m_image_cache.end(); i++) {
     if (i->second) i->second->Release(i->second);    
@@ -93,10 +108,15 @@ void Renderer::loop(EventListener *listener)
   Event event;
 
   while (!m_exit) {
+    m_eventBuffer->WaitForEventWithTimeout(m_eventBuffer, 0, 100);
     while (!m_exit && m_eventBuffer->GetEvent (m_eventBuffer, DFB_EVENT(&dfb_event)) == DFB_OK) {
       if (dfb_event.type == DIET_KEYPRESS) {
 	event.type = EVENT_KEYPRESS;
 	event.key = (Key)dfb_event.key_symbol;
+	event.repeat = dfb_event.flags & DIEF_REPEAT;
+#ifdef NMT
+	if (event.key == (Key)DIKS_PAUSE) event.key = (Key)DIKS_PLAY;
+#endif
 	debug("got key: 0x%x 0x%x\n", (int)(event.key & 0xFF00), (int)(event.key & 0xFF));
 	if (!listener->handleEvent(event)) m_exit = true;
       }
@@ -112,11 +132,19 @@ void Renderer::color(unsigned char r, unsigned char g, unsigned char b, unsigned
 
 void Renderer::rect(int x, int y, int w, int h)
 {
+  scale(&x);
+  scale(&y);
+  scale(&w);
+  scale(&h);
   m_surface->FillRectangle(m_surface, x, y, w, h);
 }
 
 void Renderer::line(int x1, int y1, int x2, int y2, bool blend)
 {
+  scale(&x1);
+  scale(&y1);
+  scale(&x2);
+  scale(&y2);
   if (blend) m_surface->SetDrawingFlags(m_surface, DSDRAW_BLEND);
   m_surface->DrawLine(m_surface, x1, y1, x2, y2);
   if (blend) m_surface->SetDrawingFlags(m_surface, DSDRAW_NOFX);
@@ -126,16 +154,19 @@ void Renderer::image(int x, int y, const char *path, bool blend)
 {
   debug("drawing: %s\n", path);
 
+  scale(&x);
+  scale(&y);
+
   IDirectFBSurface *image = NULL;
-  DFBSurfaceDescription sdsc;
-  DFBImageDescription idsc;
+  DFBSurfaceDescription dsc;
 
   if (m_image_cache.find(path) == m_image_cache.end()) {
     IDirectFBImageProvider *provider = NULL;
-    if (m_dfb->CreateImageProvider (m_dfb, path, &provider) == DFB_OK) {
-      if (provider->GetSurfaceDescription(provider, &sdsc) == DFB_OK &&
-	  provider->GetImageDescription(provider, &idsc) == DFB_OK) {
-	if (m_dfb->CreateSurface(m_dfb, &sdsc, &image) == DFB_OK) {
+    if (m_dfb->CreateImageProvider(m_dfb, path, &provider) == DFB_OK) {
+      if (provider->GetSurfaceDescription(provider, &dsc) == DFB_OK) {
+	scale(&(dsc.width));
+	scale(&(dsc.height));
+	if (m_dfb->CreateSurface(m_dfb, &dsc, &image) == DFB_OK) {
 	  provider->RenderTo(provider, image, NULL);
 	}
 	else {
@@ -145,7 +176,7 @@ void Renderer::image(int x, int y, const char *path, bool blend)
       else {
 	debug("GetSurfaceDescription failed\n");
       }
-      if (provider) provider->Release(provider);
+      provider->Release(provider);
     }
     else {
       debug("CreateImageProvider failed\n");
@@ -162,6 +193,8 @@ void Renderer::image(int x, int y, const char *path, bool blend)
 
 void Renderer::font(const char *path, int size)
 {
+  scale(&size);
+
   if (!path || !path[0]) return;
 
   DFBFontDescription dsc;
@@ -181,6 +214,10 @@ void Renderer::font(const char *path, int size)
 
 void Renderer::text(int x, int y, const char *str, int max_width)
 {
+  scale(&x);
+  scale(&y);
+  scale(&max_width);
+
   DFBRegion clip, textclip;
 
   if (max_width) {
@@ -191,7 +228,9 @@ void Renderer::text(int x, int y, const char *str, int max_width)
     textclip.y2 = clip.y2;
     m_surface->SetClip(m_surface, &textclip);
   }
+  m_surface->SetDrawingFlags(m_surface, DSDRAW_BLEND);
   m_surface->DrawString(m_surface, str, -1, (int)x, (int)y, DSTF_LEFT);
+  m_surface->SetDrawingFlags(m_surface, DSDRAW_NOFX);
   if (max_width) {
     m_surface->SetClip(m_surface, &clip);
   }
@@ -210,7 +249,6 @@ void Renderer::play(const char *file)
   pid_t pid;
 
   destroy();
-  //m_dfb->Suspend(m_dfb);
   if ((pid = fork()) == -1)
     perror("couldn't fork");
   else if (pid == 0)
@@ -218,5 +256,4 @@ void Renderer::play(const char *file)
   else if ((pid = wait(&status)) == -1)
     perror("wait error");
   init();
-  //m_dfb->Resume(m_dfb);
 }

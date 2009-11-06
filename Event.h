@@ -10,19 +10,22 @@ typedef enum {
 
 typedef enum {
 #ifdef NMT
-  KEY_BACK = DIKS_RETURN,
-  KEY_ENTER = DIKS_SELECT,
+  KEY_BACK = DIKS_STOP,
+  KEY_ENTER = DIKS_PLAY,  // DIKS_PAUSE
 #else
   KEY_BACK = DIKS_ESCAPE,
   KEY_ENTER = DIKS_RETURN,
 #endif
   KEY_UP = DIKS_CURSOR_UP,
-  KEY_DOWN = DIKS_CURSOR_DOWN
+  KEY_DOWN = DIKS_CURSOR_DOWN,
+  KEY_LEFT = DIKS_CURSOR_LEFT,
+  KEY_RIGHT = DIKS_CURSOR_RIGHT
 } Key;
 
 struct Event {
   EventType type;
   Key key;
+  bool repeat;
 };
 
 class EventListener

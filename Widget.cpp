@@ -17,7 +17,6 @@ Widget::Widget(Widget *parent)
 
 bool Widget::handleEvent(Event &event)
 {
-  debug("in Widget::handleEvent()\n");
   return true;
 }
 
@@ -74,7 +73,7 @@ void Widget::paint()
 {
   debug("in Widget::paint()\n");
   Renderer *r = m_app->renderer();
-  r->color(0, 0, 0x8f, 0xff);
+  r->color(0x90, 0x90, 0x90, 0xff);
   r->rect(m_screen_x, m_screen_y, m_box.w, m_box.h);
   r->flip();
 }

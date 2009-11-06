@@ -1,7 +1,8 @@
 #include "Application.h"
 
-Application::Application(Renderer *renderer)
-  : m_renderer(renderer)
+Application::Application(Renderer *renderer, Audio *audio)
+  : m_renderer(renderer),
+    m_audio(audio)
 {
 }
 
@@ -13,6 +14,7 @@ void Application::setScreen(Screen *screen)
   m_stack.push(screen);
   if (m_renderer->initialized()) {
     screen->paint();
+    screen->setDirty(false);
   }
 }
 
@@ -23,9 +25,14 @@ void Application::run()
   }
 }
 
-Renderer *Application::renderer()
-{
-  return m_renderer;
+void Application::go(Screen *screen) 
+{ 
+  m_stack.push(screen); 
+}
+
+void Application::back() 
+{ 
+  if (m_stack.size() > 1) delete m_stack.pop(); 
 }
 
 bool Application::handleEvent(Event &event)
@@ -39,9 +46,12 @@ bool Application::handleEvent(Event &event)
   Screen *screen = m_stack.top();
 
   if (screen) {
-    screen->handleEvent(event);
+    if (!screen->handleEvent(event)) back();
     screen = m_stack.top();
-    if (screen && screen->dirty()) screen->paint();
+    if (screen && screen->dirty()) {
+      screen->paint();
+      screen->setDirty(false);
+    }
   }
 
   return true;
@@ -49,6 +59,17 @@ bool Application::handleEvent(Event &event)
 
 bool Application::handleIdle()
 {
+  Screen *screen = m_stack.top();
+
+  if (screen) {
+    if (!screen->handleIdle()) back();
+    screen = m_stack.top();
+    if (screen && screen->dirty()) {
+      screen->paint();
+      screen->setDirty(false);
+    }
+  }
+
   return true;
 }
 
@@ -60,6 +81,7 @@ Stack::Stack()
 bool Stack::push(Screen *screen)
 {
   if (m_top < MAX_STACK_SIZE-1) {
+    if (m_top > -1) m_screens[m_top]->setDirty(true);
     m_screens[++m_top] = screen;
     return true;
   }

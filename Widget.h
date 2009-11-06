@@ -22,9 +22,10 @@ class Widget : public EventListener
   
  public:
   Widget(Widget *parent);
+  virtual ~Widget() {};
   void setDirty(bool flag) { m_dirty = flag; }
   bool dirty() { return m_dirty; }
-  Application *application() { return m_app; }
+  class Application *application() { return m_app; }
   virtual bool handleEvent(Event &event);
   virtual bool handleIdle();
   virtual void paint();

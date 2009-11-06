@@ -22,7 +22,7 @@ class Menu : public Screen
 
  public:
   Menu(Application *application, const char *title);
-  ~Menu();
+  virtual ~Menu();
   int current() { return m_current; }
   void add(MenuItem *menuItem);
   virtual bool handleEvent(Event &event);  
@@ -47,8 +47,30 @@ class MoviesMenu : public Menu
   static void m_cb(Menu *menu, MenuItem *menuItem);
 
  public:
-  MoviesMenu(Application *application);
-  ~MoviesMenu();
+  MoviesMenu(Application *application, const char *path=NULL);
+};
+
+class DownloadsMenu : public Menu
+{
+ private:
+  std::vector<class File> m_files;
+  static void m_cb(Menu *menu, MenuItem *menuItem);
+
+ public:
+  DownloadsMenu(Application *application, const char *path=NULL);
+};
+
+class Audio;
+
+class MusicMenu : public Menu
+{
+ private:
+  std::vector<class File> m_files;
+  static void m_cb(Menu *menu, MenuItem *menuItem);
+
+ public:
+  MusicMenu(Application *application, const char *path=NULL);
+  virtual ~MusicMenu();
 };
 
 #endif

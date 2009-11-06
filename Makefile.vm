@@ -2,19 +2,24 @@ ifeq ($(CXX), cc)
 CXX=g++
 endif
 CFLAGS=`pkg-config directfb direct --cflags`
-LDFLAGS=`pkg-config directfb direct --libs` 
+LDFLAGS=`pkg-config directfb --libs` -ldl -lmpg123
 
 SOURCES = Main.cpp \
 	Utils.cpp \
+	Thread.cpp \
+	ImageLoader.cpp \
 	File.cpp \
 	Application.cpp \
+	Audio.cpp \
 	Renderer.cpp \
+	Player.cpp \
 	Box.cpp \
 	Widget.cpp \
 	Screen.cpp \
 	Menu.cpp \
 	MenuItem.cpp \
 	MainMenu.cpp \
+	MusicMenu.cpp \
 	MoviesMenu.cpp 
 
 OBJECTS = $(SOURCES:.cpp=.o)
