@@ -1,10 +1,9 @@
 #include <string.h>
 #include "Menu.h"
 
-MenuItem::MenuItem(const char *label, MenuItemCallback callback, const char *image, const void *data)
+MenuItem::MenuItem(const char *label, MenuItemCallback callback, const char *image)
   : Widget(NULL),
     m_cb(callback),
-    m_data(data),
     m_index(-1)
 {
   setLabel(label);
@@ -45,8 +44,8 @@ void MenuItem::paint()
   }
 }
 
-ArrowMenuItem::ArrowMenuItem(const char *label, MenuItemCallback callback, const char *image, const void *data)
-  : MenuItem(label, callback, image, data)
+ArrowMenuItem::ArrowMenuItem(const char *label, MenuItemCallback callback, const char *image)
+  : MenuItem(label, callback, image)
 {
 }
 

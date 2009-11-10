@@ -25,7 +25,7 @@ struct Image
   IDirectFBSurface *surface;
 };
 
-typedef std::map<const char *, Image *> image_map;
+typedef std::map<unsigned, Image *> image_map;
 typedef std::map<unsigned, Font *> font_map;
 
 class Renderer

@@ -16,13 +16,13 @@ Renderer::Renderer(int argc, char **argv)
     m_image_loader(NULL),
     m_scale(1.0)
 {
+  Font::init();
   if (DirectFBInit(&argc, &argv) != DFB_OK) {
     fprintf(stderr, "Error in DirectFBInit!\n");
   }
   else {
     init();
   }
-  Font::init();
 }
 
 Renderer::~Renderer()
@@ -65,9 +65,10 @@ void Renderer::init()
   m_width = VIRTUAL_WIDTH;
   m_height = VIRTUAL_HEIGHT;
 
-  if (m_surface->Flip (m_surface, NULL, DSFLIP_NONE) != DFB_OK) {
-    fprintf(stderr, "Error in Flip!\n"); return;
-  }
+  color(0,0,0,0xff);
+  rect(0,0,m_width, m_height); flip();
+  rect(0,0,m_width, m_height); flip();
+
   if (m_dfb->GetInputDevice (m_dfb, INPUT_DEVICE, &m_input) != DFB_OK) {
     fprintf(stderr, "Error in GetInputDevice!\n"); return;    
   }
@@ -76,13 +77,8 @@ void Renderer::init()
     fprintf(stderr, "Error in CreateEventBuffer!\n"); return;    
   }
 
-  /*
-  m_image_loader = new ImageLoader();
-  m_image_loader->start();
-  */
-
-  color(0,0,0,0xff);
-  rect(0,0,m_width, m_height);
+  // m_image_loader = new ImageLoader();
+  // m_image_loader->start();
 
   m_exit = false;
   m_initialized = true;
@@ -181,7 +177,11 @@ void Renderer::line(int x1, int y1, int x2, int y2, bool blend)
 
 Image *Renderer::loadImage(const char *path)
 {
-  if (m_image_cache.find(path) == m_image_cache.end()) {
+  if (!path || !path[0]) return NULL;
+
+  unsigned key = hash(path);
+
+  if (m_image_cache.find(key) == m_image_cache.end()) {
     Image *image = new Image;
     image->surface = NULL;
     image->dsc.preallocated[0].data = NULL;
@@ -217,9 +217,9 @@ Image *Renderer::loadImage(const char *path)
     else {
       debug("CreateImageProvider failed\n");
     }
-    m_image_cache[path] = image;
+    m_image_cache[key] = image;
   }
-  return m_image_cache[path];
+  return m_image_cache[key];
 }
 
 void Renderer::image(int x, int y, const char *path, bool blend) 
@@ -232,8 +232,9 @@ void Renderer::image(int x, int y, const char *path, bool blend)
   Image *image = loadImage(path);
 
   if (image) {
-    if (!image->surface && image->dsc.preallocated[0].data)
+    if (!image->surface && image->dsc.preallocated[0].data) {
       m_dfb->CreateSurface(m_dfb, &image->dsc, &image->surface);
+    }
     if (image->surface) {
       if (blend) m_surface->SetBlittingFlags(m_surface, DSBLIT_BLEND_ALPHACHANNEL);
       m_surface->Blit(m_surface, image->surface, NULL, x, y);

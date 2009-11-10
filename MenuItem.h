@@ -12,7 +12,7 @@ class MenuItem : public Widget
   bool hasFocus();
 
  public:
-  MenuItem(const char *label, MenuItemCallback callback=NULL, const char *image=NULL, const void *data=NULL);
+  MenuItem(const char *label, MenuItemCallback callback=NULL, const char *image=NULL);
   void setCallback(MenuItemCallback callback);
   void select();
   int index() { return m_index; }
@@ -23,7 +23,7 @@ class MenuItem : public Widget
 class ArrowMenuItem : public MenuItem
 {
  public:
-  ArrowMenuItem(const char *label, MenuItemCallback callback=NULL, const char *image=NULL, const void *data=NULL);
+  ArrowMenuItem(const char *label, MenuItemCallback callback=NULL, const char *image=NULL);
   virtual void paint();
 };
 

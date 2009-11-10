@@ -4,6 +4,33 @@ Application::Application(Renderer *renderer, Audio *audio)
   : m_renderer(renderer),
     m_audio(audio)
 {
+  Renderer *r = renderer;
+  r->color(0x80, 0x80, 0x80, 0xff);
+  r->rect(0, 0, r->width(), r->height());
+  r->image(560, 335, "images/logo.png", true);
+  r->flip();  
+  r->loadImage("images/arrow.png");
+  r->loadImage("images/arrow_on.png");
+  r->loadImage("images/fade_bot.png");
+  r->loadImage("images/fade_top.png");
+  r->loadImage("images/menuitem_bg.png");
+  r->loadImage("images/position_bar.png");
+  r->loadImage("images/position_knob.png");
+  r->loadImage("images/movies.png");
+  r->loadImage("images/tvshows.png");
+  r->loadImage("images/music.png");
+  r->loadImage("images/settings.png");
+  r->loadImage("images/unknown_music.png");
+  r->font("fonts/LucidaSansDemiboldRoman.ttf", 18);
+  r->font("fonts/LucidaSansDemiboldRoman.ttf", 29);
+  r->font("fonts/LucidaSansDemiboldRoman.ttf", 37);
+  r->font("fonts/LucidaSansDemiboldRoman.ttf", 42);
+  r->font("fonts/LucidaSansRegular.ttf", 29);
+  r->color(0x0, 0x0, 0x0, 0xff);
+  r->rect(0, 0, r->width(), r->height());
+  r->flip();  
+  r->rect(0, 0, r->width(), r->height());
+  r->flip();    
 }
 
 void Application::setScreen(Screen *screen) 

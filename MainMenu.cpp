@@ -1,16 +1,9 @@
 #include "Menu.h"
 
 MainMenu::MainMenu(Application *application)
-  : Menu(application, "NMT TV")
+  : Menu(application, "tankTV")
 {
   m_top = 200;
-  /*
-  add(new ArrowMenuItem("Movies", m_cb));
-  add(new ArrowMenuItem("TV Shows", m_cb));
-  add(new ArrowMenuItem("Music", m_cb));
-  add(new ArrowMenuItem("Downloads", m_cb));
-  add(new ArrowMenuItem("Settings", m_cb));
-  */
   add(new ArrowMenuItem("Movies", m_cb, "images/movies.png"));
   add(new ArrowMenuItem("TV Shows", m_cb, "images/tvshows.png"));
   add(new ArrowMenuItem("Music", m_cb, "images/music.png"));
