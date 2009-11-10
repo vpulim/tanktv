@@ -1,8 +1,8 @@
 ifeq ($(CXX), cc)
 CXX=g++
 endif
-CFLAGS=`pkg-config directfb --cflags`
-LDFLAGS=`pkg-config directfb --libs` -ldl -lmpg123
+CFLAGS=`pkg-config directfb freetype2 --cflags`
+LDFLAGS=`pkg-config directfb freetype2 --libs` -ldl -lmpg123
 
 SOURCES = Main.cpp \
 	Utils.cpp \
@@ -12,6 +12,7 @@ SOURCES = Main.cpp \
 	Application.cpp \
 	Audio.cpp \
 	Renderer.cpp \
+	Font.cpp \
 	Player.cpp \
 	Box.cpp \
 	Widget.cpp \
@@ -21,7 +22,9 @@ SOURCES = Main.cpp \
 	MainMenu.cpp \
 	MusicMenu.cpp \
 	DownloadsMenu.cpp \
-	MoviesMenu.cpp 
+	SettingsMenu.cpp \
+	MoviesMenu.cpp \
+	TVShowsMenu.cpp 
 
 OBJECTS = $(SOURCES:.cpp=.o)
 APP = nmti
@@ -30,11 +33,9 @@ all: $(SOURCES) $(APP)
 
 $(APP): $(OBJECTS)
 	$(CXX) $(LDFLAGS) -Wl,-E $(OBJECTS) -o $@
-	scp -i /home/vp/id_rsa_root.openssh nmti root@192.168.1.4:/share/Apps/TankTV
+	scp -i /Users/vp/nmt/id_rsa_root.openssh nmti root@192.168.1.4:/share/Apps/TankTV
 
 .cpp.o:
-	cat config.in > config.h
-	echo "#define NMT 1" >> config.h
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean:

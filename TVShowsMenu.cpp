@@ -2,14 +2,14 @@
 #include "File.h"
 #include <algorithm>
 
-MoviesMenu::MoviesMenu(Application *application, const char *title, const char *path)
+TVShowsMenu::TVShowsMenu(Application *application, const char *title, const char *path)
   : Menu(application, title)
 {
   if (path) {
     File::listDirectory(path, m_files);
   }
   else {
-    File::listDirectory("/share/Video/Movies", m_files);
+    File::listDirectory("/share/Video/TV Shows", m_files);
   }
 
   std::sort(m_files.begin(), m_files.end());
@@ -24,9 +24,9 @@ MoviesMenu::MoviesMenu(Application *application, const char *title, const char *
   }
 }
 
-void MoviesMenu::m_cb(Menu *m, MenuItem *menuItem)
+void TVShowsMenu::m_cb(Menu *m, MenuItem *menuItem)
 {
-  MoviesMenu *menu = (MoviesMenu *)m;
+  TVShowsMenu *menu = (TVShowsMenu *)m;
   Application *app = menu->application();
   if (menu) {
     Renderer *r = app->renderer();
@@ -34,7 +34,7 @@ void MoviesMenu::m_cb(Menu *m, MenuItem *menuItem)
     const char *path = file.path();
 
     if (file.isDirectory()) {
-      app->go(new MoviesMenu(app, file.name(), path));      
+      app->go(new TVShowsMenu(app, file.name(), path));      
     }
     else {
       if (!app->audio()->isStopped()) app->audio()->close();

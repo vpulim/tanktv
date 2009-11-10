@@ -12,6 +12,7 @@ Audio::Audio()
   : m_audio(NULL),
     m_plugin(NULL),
     m_dl(NULL),
+    m_opened(false),
     m_state(STOPPED),
     m_thread(0),
     m_mpg123(0),
@@ -34,6 +35,8 @@ Audio::Audio()
   struct config_param param = { "", 1, block_params, 6 };
 
   debug("initializing audio...\n");
+
+  strcpy(m_file, "");
 
   if ((errno=mpg123_init()) != MPG123_OK || (m_mpg123=mpg123_new(NULL, &errno)) == NULL) {
     debug("couldn't initialize mpg123: %s\n", mpg123_plain_strerror(errno));
@@ -74,13 +77,14 @@ Audio::~Audio()
 
 bool Audio::open(const char *file)
 {
-  struct audio_format m_format;  
   long rate;
   int channels, encoding;
+  int meta;
+  char title[31];
 
-  close();
+  stop();
 
-  debug("opening audio...\n");
+  debug("playing mp3: %s\n", file);
 
   if (mpg123_open(m_mpg123, (char *)file) != MPG123_OK) {
     debug("couldn't open mp3 file: %s\n", mpg123_strerror(m_mpg123));
@@ -97,16 +101,35 @@ bool Audio::open(const char *file)
     return false;
   }
 
-  m_format.sample_rate = rate;
-  m_format.channels = channels;
-  m_format.bits = 16;
+  m_v1 = 0;
+  m_v2 = 0;
+  if ((meta=mpg123_meta_check(m_mpg123))) {
+    if (meta & MPG123_ID3) {
+      mpg123_id3(m_mpg123, &m_v1, &m_v2);
+    }
+  }
 
   mpg123_format_none(m_mpg123);
   mpg123_format(m_mpg123, rate, channels, encoding);
 
 #ifdef NMT
-  m_plugin->open(m_audio, &m_format, NULL);
+  if (!m_opened) {
+    m_format.sample_rate = rate;
+    m_format.channels = channels;
+    m_format.bits = 16;
+    m_plugin->open(m_audio, &m_format, NULL);
+    m_opened = true;
+  }
+  else if (m_format.sample_rate != rate || m_format.channels != channels) {
+    m_plugin->close(m_audio);
+    m_format.sample_rate = rate;
+    m_format.channels = channels;
+    m_format.bits = 16;
+    m_plugin->open(m_audio, &m_format, NULL);
+  }
 #endif
+
+  strncpy(m_file, file, sizeof(m_file)-1);
 
   m_state = PLAYING;
   m_elapsed = m_remaining = 0;
@@ -115,7 +138,7 @@ bool Audio::open(const char *file)
   return true;
 }
 
-void Audio::close()
+void Audio::stop()
 {
   if (m_state != STOPPED) {
     m_state = STOPPED;
@@ -123,7 +146,18 @@ void Audio::close()
     m_thread = 0;
     m_elapsed = m_remaining = 0;
     m_seekto = -1;
-    if (m_audio) m_plugin->close(m_audio);
+    strcpy(m_file, "");
+  }
+}
+
+void Audio::close()
+{
+  if (m_state != STOPPED) {
+    stop();
+    if (m_opened && m_audio) {
+      m_plugin->close(m_audio);
+      m_opened = false;
+    }
   }
 
   if (m_mpg123) {
@@ -149,6 +183,7 @@ void *Audio::play_thread(void *arg)
       usleep(100);
       continue;
     }
+
     if (audio->m_seekto >= 0) {
       frames = mpg123_timeframe(mh, audio->m_seekto);
       if (frames >= 0) {
@@ -156,6 +191,7 @@ void *Audio::play_thread(void *arg)
       }
       audio->m_seekto = -1;
     }
+
     errno = mpg123_read(mh, buffer, buffer_size, &bytes);
     mpg123_position(mh, 0, bytes, &frames, &frames_left, &secs, &secs_left);
     audio->m_elapsed = (int)(secs+0.5);
@@ -164,6 +200,7 @@ void *Audio::play_thread(void *arg)
 #ifdef NMT
     audio->m_plugin->play(audio->m_audio, buffer, buffer_size, NULL);
 #endif
+
   } while (errno == MPG123_OK && audio->m_state != STOPPED);
 
   free(buffer);
@@ -191,6 +228,43 @@ void Audio::forward() {
 
   m_seekto = m_elapsed + 5;
   if (m_remaining < 5) m_seekto = m_elapsed + m_remaining - 1;
+}
+
+const char *Audio::title()
+{
+  if (m_v2) return m_v2->title->p;
+  if (m_v1) {
+    m_v1->title[sizeof(m_v1->title)-1] = 0;
+    return m_v1->title;
+  }
+  return NULL;
+}
+
+const char *Audio::album()
+{
+  if (m_v2) return m_v2->album->p;
+  if (m_v1) {
+    m_v1->album[sizeof(m_v1->album)-1] = 0;
+    return m_v1->album;
+  }
+  return NULL;
+}
+
+const char *Audio::artist()
+{
+  if (m_v2) return m_v2->artist->p;
+  if (m_v1) {
+    m_v1->artist[sizeof(m_v1->artist)-1] = 0;
+    return m_v1->artist;
+  }
+  return NULL;
+}
+
+const char *Audio::genre()
+{
+  if (m_v2) return m_v2->genre->p;
+  if (m_v1) return NULL;
+  return NULL;
 }
 
 extern "C" struct block_param *config_get_block_param(const struct config_param * param, const char *name)

@@ -3,8 +3,8 @@
 #include "File.h"
 #include <algorithm>
 
-MusicMenu::MusicMenu(Application *application, const char *path)
-  : Menu(application, "Music")
+MusicMenu::MusicMenu(Application *application, const char *title, const char *path)
+  : Menu(application, title)
 {
   if (path) {
     File::listDirectory(path, m_files);
@@ -40,12 +40,15 @@ void MusicMenu::m_cb(Menu *m, MenuItem *menuItem)
     const char *path = file.path();
     
     if (file.isDirectory()) {
-      app->go(new MusicMenu(app, path));      
+      app->go(new MusicMenu(app, file.name(), path));      
     }
     else {
-      debug("opening %s...\n", path);
-      if (app->audio()->open(path))
-	app->go(new Player(app));      
+      if (strcmp(app->audio()->nowPlaying(), path)) {
+	debug("opening %s...\n", path);
+	if (!app->audio()->open(path)) 
+	  return;
+      }
+      app->go(new Player(app));      
     }
   }
 }

@@ -17,8 +17,16 @@
 #define FONT_NORMAL 0
 #define FONT_BOLD 1
 
-typedef std::map<const char *, IDirectFBSurface *> image_map;
-typedef std::map<unsigned, IDirectFBFont *> font_map;
+class Font;
+
+struct Image
+{
+  DFBSurfaceDescription dsc;
+  IDirectFBSurface *surface;
+};
+
+typedef std::map<const char *, Image *> image_map;
+typedef std::map<unsigned, Font *> font_map;
 
 class Renderer
 {
@@ -31,10 +39,11 @@ class Renderer
   IDirectFBInputDevice *m_input;
   int m_width;
   int m_height;
-  double m_scale;
+  float m_scale;
   ImageLoader *m_image_loader;
   image_map m_image_cache;
   font_map m_font_cache;
+  Font *m_font;
 
  private:
   void init();
@@ -45,6 +54,8 @@ class Renderer
   Renderer(int argc, char **argv);
   ~Renderer();
   bool initialized() { return m_initialized; }
+  IDirectFBSurface *surface() { return m_surface; }
+  IDirectFBSurface *createSurface(int width, int height, int pixelformat);
   void exit() { m_exit = true; }
   int width() { return m_width; }
   int height() { return m_height; }
@@ -52,6 +63,7 @@ class Renderer
   void color(unsigned char r, unsigned char g, unsigned char b, unsigned char alpha);
   void rect(int x, int y, int w, int h);
   void line(int x1, int y1, int x2, int y2, bool blend = false);
+  Image *loadImage(const char *path);
   void image(int x, int y, const char *path, bool blend = false);
   void font(const char *path, int size = 32);
   void text(int x, int y, const char *str, int max_width = 0);

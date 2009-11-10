@@ -37,7 +37,6 @@ void File::listDirectory(const char *dir, vector<File> &files)
   }
 
   if((dp  = opendir(dir)) == NULL) {
-    debug("error opening directory: %s\n", dir);
     perror("listDirectory");
     return;
   }
@@ -47,8 +46,6 @@ void File::listDirectory(const char *dir, vector<File> &files)
       strncpy(path+len, dirp->d_name, sizeof(path)-len-1);
       stat(path, &st);
       files.push_back(File(dirp->d_name, path, S_ISDIR(st.st_mode)));
-      debug("file: %s, dir: %d\n", dirp->d_name, S_ISDIR(st.st_mode));
-      debug("      %s\n", path);
     }
   }
   closedir(dp);

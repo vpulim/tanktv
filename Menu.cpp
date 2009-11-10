@@ -76,13 +76,13 @@ void Menu::paint()
     }
     end = min(m_size-1, start + 9);
     
-    r->font("fonts/LucidaSansDemiboldRoman.ttf", 32);
+    r->font("fonts/LucidaSansDemiboldRoman.ttf", 42);
     r->color(0xff, 0xff, 0xff, 0xff);
     r->text(x + 150, m_top - 40, m_label);
 
     r->image(x - 32, m_top + (m_current - start) * height - 18, "images/menuitem_bg.png");  
 
-    r->font("fonts/LucidaSansDemiboldRoman.ttf", 28);
+    r->font("fonts/LucidaSansDemiboldRoman.ttf", 29);
     for (int i=start; i<=end; i++) {
       MenuItem *mi = m_menuitems[i];
       y = (i - start) * height;

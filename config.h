@@ -1,8 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// #define NMT 1
 #define DEBUG 1
+#define NMT 1
 
 #include <stdio.h>
 
@@ -14,4 +14,3 @@
 
 #endif
 
-#define NMT 1

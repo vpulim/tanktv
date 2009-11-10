@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "Renderer.h"
+#include "Font.h"
 #include "Utils.h"
 
 #define VIRTUAL_WIDTH 1280
@@ -13,7 +14,7 @@ Renderer::Renderer(int argc, char **argv)
   : m_initialized(false),
     m_exit(false),
     m_image_loader(NULL),
-    m_scale(1.5)
+    m_scale(1.0)
 {
   if (DirectFBInit(&argc, &argv) != DFB_OK) {
     fprintf(stderr, "Error in DirectFBInit!\n");
@@ -21,11 +22,17 @@ Renderer::Renderer(int argc, char **argv)
   else {
     init();
   }
+  Font::init();
 }
 
 Renderer::~Renderer()
 {
   if (m_initialized) destroy();
+  for (image_map::const_iterator i=m_image_cache.begin(); i != m_image_cache.end(); i++) {
+    if (i->second && i->second->dsc.preallocated[0].data)
+      free(i->second->dsc.preallocated[0].data);
+  }
+  Font::finish();
 }
 
 void Renderer::init()
@@ -42,8 +49,9 @@ void Renderer::init()
     fprintf(stderr, "Error in SetCooperativeLevel!\n"); return;
   }
   
-  dsc.flags = DSDESC_CAPS;
-  dsc.caps  = (DFBSurfaceCapabilities)(DSCAPS_PRIMARY | DSCAPS_FLIPPING);
+  dsc.flags = (DFBSurfaceDescriptionFlags)(DSDESC_CAPS | DSDESC_PIXELFORMAT);
+  dsc.caps  = (DFBSurfaceCapabilities)(DSCAPS_PRIMARY | DSCAPS_DOUBLE);
+  dsc.pixelformat = (DFBSurfacePixelFormat)DSPF_ARGB;
   
   if (m_dfb->CreateSurface( m_dfb, &dsc, &m_surface ) != DFB_OK) {
     fprintf(stderr, "Error in CreateSurface!\n"); return;
@@ -53,6 +61,7 @@ void Renderer::init()
     fprintf(stderr, "Error in GetSize!\n"); return;
   }
 
+  m_scale = ((float)m_width) / VIRTUAL_WIDTH;
   m_width = VIRTUAL_WIDTH;
   m_height = VIRTUAL_HEIGHT;
 
@@ -86,12 +95,14 @@ void Renderer::destroy()
   if (m_image_loader) delete m_image_loader;
 
   for (image_map::const_iterator i=m_image_cache.begin(); i != m_image_cache.end(); i++) {
-    if (i->second) i->second->Release(i->second);    
+    if (i->second && i->second->surface) {
+      i->second->surface->Release(i->second->surface);    
+      i->second->surface = NULL;
+    }
   }
-  m_image_cache.clear();
 
   for (font_map::const_iterator i=m_font_cache.begin(); i != m_font_cache.end(); i++) {
-    if (i->second) i->second->Release(i->second);    
+    if (i->second) delete i->second;    
   }
   m_font_cache.clear();
 
@@ -125,6 +136,24 @@ void Renderer::loop(EventListener *listener)
   }    
 }
  
+IDirectFBSurface *Renderer::createSurface(int width, int height, int pixelFormat)
+{
+  if (!width || !height) return NULL;
+
+  DFBSurfaceDescription dsc;
+  IDirectFBSurface *surface = NULL;
+  dsc.flags = (DFBSurfaceDescriptionFlags)(DSDESC_CAPS | DSDESC_WIDTH | DSDESC_HEIGHT | DSDESC_PIXELFORMAT);
+  dsc.caps = DSCAPS_NONE;
+  dsc.width = width;
+  dsc.height = height;
+  dsc.pixelformat = (DFBSurfacePixelFormat)pixelFormat;
+  if (m_dfb->CreateSurface(m_dfb, &dsc, &surface) != DFB_OK) {
+    fprintf(stderr, "Error creating surface!\n");
+    surface = NULL;
+  }
+  return surface;
+}
+
 void Renderer::color(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
   m_surface->SetColor(m_surface, r & 0xff, g & 0xff, b & 0xff, a & 0xff);
@@ -150,24 +179,31 @@ void Renderer::line(int x1, int y1, int x2, int y2, bool blend)
   if (blend) m_surface->SetDrawingFlags(m_surface, DSDRAW_NOFX);
 }
 
-void Renderer::image(int x, int y, const char *path, bool blend) 
+Image *Renderer::loadImage(const char *path)
 {
-  debug("drawing: %s\n", path);
-
-  scale(&x);
-  scale(&y);
-
-  IDirectFBSurface *image = NULL;
-  DFBSurfaceDescription dsc;
-
   if (m_image_cache.find(path) == m_image_cache.end()) {
+    Image *image = new Image;
+    image->surface = NULL;
+    image->dsc.preallocated[0].data = NULL;
+
     IDirectFBImageProvider *provider = NULL;
+    DFBSurfaceDescription &dsc = image->dsc;
     if (m_dfb->CreateImageProvider(m_dfb, path, &provider) == DFB_OK) {
       if (provider->GetSurfaceDescription(provider, &dsc) == DFB_OK) {
 	scale(&(dsc.width));
 	scale(&(dsc.height));
-	if (m_dfb->CreateSurface(m_dfb, &dsc, &image) == DFB_OK) {
-	  provider->RenderTo(provider, image, NULL);
+	if (m_dfb->CreateSurface(m_dfb, &dsc, &image->surface) == DFB_OK) {
+	  void *data;
+	  int pitch;
+	  provider->RenderTo(provider, image->surface, NULL);
+	  dsc.flags = (DFBSurfaceDescriptionFlags)(dsc.flags | DSDESC_PREALLOCATED);
+	  image->surface->Lock(image->surface, DSLF_READ, &data, &pitch);
+	  dsc.preallocated[0].data = malloc(pitch * dsc.height);
+	  memcpy(dsc.preallocated[0].data, data, pitch * dsc.height);
+	  image->surface->Unlock(image->surface);
+	  dsc.preallocated[0].pitch = pitch;
+	  dsc.preallocated[1].data = NULL;
+	  dsc.preallocated[1].pitch = 0;
 	}
 	else {
 	  debug("CreateSurface failed\n");
@@ -183,56 +219,26 @@ void Renderer::image(int x, int y, const char *path, bool blend)
     }
     m_image_cache[path] = image;
   }
-  image = m_image_cache[path];
-  if (image) {
-    if (blend) m_surface->SetBlittingFlags(m_surface, DSBLIT_BLEND_ALPHACHANNEL);
-    m_surface->Blit(m_surface, image, NULL, x, y);
-    if (blend) m_surface->SetBlittingFlags(m_surface, DSBLIT_NOFX);
-  }
+  return m_image_cache[path];
 }
 
-void Renderer::font(const char *path, int size)
+void Renderer::image(int x, int y, const char *path, bool blend) 
 {
-  scale(&size);
+  fflush(stdout);
 
-  if (!path || !path[0]) return;
-
-  DFBFontDescription dsc;
-  IDirectFBFont *font = NULL;
-  unsigned key = hash(path) + size;
-
-  if (m_font_cache.find(key) == m_font_cache.end()) {
-    dsc.flags = DFDESC_HEIGHT;
-    dsc.height = size;
-    m_dfb->CreateFont(m_dfb, path, &dsc, &font);
-    m_font_cache[key] = font;    
-  }
-  font = m_font_cache[key];
-  if (font)
-    m_surface->SetFont(m_surface, font);
-}
-
-void Renderer::text(int x, int y, const char *str, int max_width)
-{
   scale(&x);
   scale(&y);
-  scale(&max_width);
 
-  DFBRegion clip, textclip;
+  Image *image = loadImage(path);
 
-  if (max_width) {
-    m_surface->GetClip(m_surface, &clip);
-    textclip.x1 = clip.x1;
-    textclip.y1 = clip.y1;
-    textclip.x2 = x + max_width;
-    textclip.y2 = clip.y2;
-    m_surface->SetClip(m_surface, &textclip);
-  }
-  m_surface->SetDrawingFlags(m_surface, DSDRAW_BLEND);
-  m_surface->DrawString(m_surface, str, -1, (int)x, (int)y, DSTF_LEFT);
-  m_surface->SetDrawingFlags(m_surface, DSDRAW_NOFX);
-  if (max_width) {
-    m_surface->SetClip(m_surface, &clip);
+  if (image) {
+    if (!image->surface && image->dsc.preallocated[0].data)
+      m_dfb->CreateSurface(m_dfb, &image->dsc, &image->surface);
+    if (image->surface) {
+      if (blend) m_surface->SetBlittingFlags(m_surface, DSBLIT_BLEND_ALPHACHANNEL);
+      m_surface->Blit(m_surface, image->surface, NULL, x, y);
+      if (blend) m_surface->SetBlittingFlags(m_surface, DSBLIT_NOFX);
+    }
   }
 }
 
@@ -256,4 +262,35 @@ void Renderer::play(const char *file)
   else if ((pid = wait(&status)) == -1)
     perror("wait error");
   init();
+}
+
+void Renderer::font(const char *path, int size)
+{
+  if (!path || !path[0]) return;
+
+  unsigned key = hash(path) + size;
+
+  scale(&size);
+
+  if (m_font_cache.find(key) == m_font_cache.end()) {
+    m_font = new Font(this, path, size);
+    if (!m_font->isValid()) { 
+      fprintf(stderr, "FreeType: Could not find or load font file.\n");
+      delete m_font;
+      m_font = NULL;
+    }
+    m_font_cache[key] = m_font;
+  }
+  m_font = m_font_cache[key];
+}
+
+void Renderer::text( int x, int y, const char *text, int max_width)
+{
+  if (!m_font) return;
+
+  scale(&x);
+  scale(&y);
+  scale(&max_width);
+  
+  m_font->draw(x, y, text, max_width);
 }

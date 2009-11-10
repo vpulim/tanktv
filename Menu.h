@@ -47,7 +47,17 @@ class MoviesMenu : public Menu
   static void m_cb(Menu *menu, MenuItem *menuItem);
 
  public:
-  MoviesMenu(Application *application, const char *path=NULL);
+  MoviesMenu(Application *application, const char *title="Movies", const char *path=NULL);
+};
+
+class TVShowsMenu : public Menu
+{
+ private:
+  std::vector<class File> m_files;
+  static void m_cb(Menu *menu, MenuItem *menuItem);
+
+ public:
+  TVShowsMenu(Application *application, const char *title="TV Shows", const char *path=NULL);
 };
 
 class DownloadsMenu : public Menu
@@ -57,7 +67,7 @@ class DownloadsMenu : public Menu
   static void m_cb(Menu *menu, MenuItem *menuItem);
 
  public:
-  DownloadsMenu(Application *application, const char *path=NULL);
+  DownloadsMenu(Application *application, const char *title="Downloads", const char *path=NULL);
 };
 
 class Audio;
@@ -69,8 +79,15 @@ class MusicMenu : public Menu
   static void m_cb(Menu *menu, MenuItem *menuItem);
 
  public:
-  MusicMenu(Application *application, const char *path=NULL);
+  MusicMenu(Application *application, const char *title="Music", const char *path=NULL);
   virtual ~MusicMenu();
+};
+
+class SettingsMenu : public Menu
+{
+ public:
+  SettingsMenu(Application *application);
+  virtual void paint();
 };
 
 #endif

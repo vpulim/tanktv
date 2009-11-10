@@ -54,17 +54,24 @@ class Audio
  private:
   enum state_t { STOPPED, PLAYING, PAUSED };
   void *m_audio;
+  bool m_opened;
   struct audio_output_plugin *m_plugin;
   void *m_dl;
+  char m_file[1024];
+  struct audio_format m_format;  
   volatile enum state_t m_state;
   volatile int m_elapsed;
   volatile int m_remaining;
   volatile int m_seekto;
   pthread_t m_thread;
   mpg123_handle *m_mpg123;
- 
+  mpg123_id3v1 *m_v1;
+  mpg123_id3v2 *m_v2;
+  char **m_icy;
+
  private:
   static void *play_thread(void *arg);
+  void stop();
 
  public:
   Audio();
@@ -75,11 +82,16 @@ class Audio
   void pause();
   void rewind();
   void forward();
+  const char *nowPlaying() { return m_file; };
   bool isPlaying() { return m_state == PLAYING; };
   bool isPaused() { return m_state == PAUSED; };
   bool isStopped() { return m_state == STOPPED; };
   int elapsed() { return m_elapsed; }
   int remaining() { return m_remaining; }
+  const char *title();
+  const char *album();
+  const char *artist();
+  const char *genre();
 };
 
 #endif

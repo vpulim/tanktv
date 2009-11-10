@@ -2,8 +2,8 @@
 #include "File.h"
 #include <algorithm>
 
-DownloadsMenu::DownloadsMenu(Application *application, const char *path)
-  : Menu(application, "Downloads")
+DownloadsMenu::DownloadsMenu(Application *application, const char *title, const char *path)
+  : Menu(application, title)
 {
   if (path) {
     File::listDirectory(path, m_files);
@@ -34,7 +34,7 @@ void DownloadsMenu::m_cb(Menu *m, MenuItem *menuItem)
     const char *path = file.path();
 
     if (file.isDirectory()) {
-      app->go(new MoviesMenu(app, path));      
+      app->go(new MoviesMenu(app, file.name(), path));      
     }
     else {
       if (!app->audio()->isStopped()) app->audio()->close();
