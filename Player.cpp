@@ -81,10 +81,10 @@ void Player::paint()
   Renderer *r = m_app->renderer();
   r->color(0x0, 0x0, 0x0, 0xff);
   r->rect(m_screen_x, m_screen_y, m_box.w, m_box.h);
-  r->image(120, 166, "images/unknown_music.png");
+  r->image(100, 92, "images/unknown_album.png");
   r->flip();  
   r->color(0x0, 0x0, 0x0, 0xff);
   r->rect(m_screen_x, m_screen_y, m_box.w, m_box.h);
-  r->image(120, 166, "images/unknown_music.png");
+  r->image(100, 92, "images/unknown_album.png");
   r->flip();  
 }

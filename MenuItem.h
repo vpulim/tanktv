@@ -8,11 +8,13 @@ class MenuItem : public Widget
   MenuItemCallback m_cb;
   int m_index;
   char m_image[256];
+  int m_x;
+  int m_y;
   friend void Menu::add(MenuItem *menuItem);
   bool hasFocus();
 
  public:
-  MenuItem(const char *label, MenuItemCallback callback=NULL, const char *image=NULL);
+  MenuItem(const char *label, MenuItemCallback callback=NULL, const char *image=NULL, int x=0, int y=0);
   void setCallback(MenuItemCallback callback);
   void select();
   int index() { return m_index; }
@@ -23,7 +25,7 @@ class MenuItem : public Widget
 class ArrowMenuItem : public MenuItem
 {
  public:
-  ArrowMenuItem(const char *label, MenuItemCallback callback=NULL, const char *image=NULL);
+  ArrowMenuItem(const char *label, MenuItemCallback callback=NULL, const char *image=NULL, int x=0, int y=0);
   virtual void paint();
 };
 

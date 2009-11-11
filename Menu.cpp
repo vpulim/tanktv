@@ -66,7 +66,7 @@ void Menu::paint()
     Renderer *r = m_app->renderer();
 
     r->color(0, 0, 0, 0xff);
-    r->rect(640, 0, 640, 720);
+    r->rect(0, 0, r->width(), r->height());
 
     if (m_current > m_size - 5) {
       start = max(0, m_size - 9);

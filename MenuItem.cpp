@@ -1,10 +1,12 @@
 #include <string.h>
 #include "Menu.h"
 
-MenuItem::MenuItem(const char *label, MenuItemCallback callback, const char *image)
+MenuItem::MenuItem(const char *label, MenuItemCallback callback, const char *image, int x, int y)
   : Widget(NULL),
     m_cb(callback),
-    m_index(-1)
+    m_index(-1),
+    m_x(x),
+    m_y(y)
 {
   setLabel(label);
   if (image && strlen(image) < sizeof m_image - 2) 
@@ -34,7 +36,7 @@ void MenuItem::paint()
     r->text(m_screen_x, m_screen_y + 35, m_label, 445);
     if (hasFocus()) {
       if (*m_image) {
-	r->image(0, 0, m_image);
+	r->image(m_x, m_y, m_image);
       }
       else {
 	r->color(0, 0, 0, 0xff);
@@ -44,8 +46,8 @@ void MenuItem::paint()
   }
 }
 
-ArrowMenuItem::ArrowMenuItem(const char *label, MenuItemCallback callback, const char *image)
-  : MenuItem(label, callback, image)
+ArrowMenuItem::ArrowMenuItem(const char *label, MenuItemCallback callback, const char *image, int x, int y)
+  : MenuItem(label, callback, image, x, y)
 {
 }
 

@@ -20,7 +20,8 @@ Application::Application(Renderer *renderer, Audio *audio)
   r->loadImage("images/tvshows.png");
   r->loadImage("images/music.png");
   r->loadImage("images/settings.png");
-  r->loadImage("images/unknown_music.png");
+  r->loadImage("images/unknown_movie.png");
+  r->loadImage("images/unknown_album.png");
   r->font("fonts/LucidaSansDemiboldRoman.ttf", 18);
   r->font("fonts/LucidaSansDemiboldRoman.ttf", 29);
   r->font("fonts/LucidaSansDemiboldRoman.ttf", 37);

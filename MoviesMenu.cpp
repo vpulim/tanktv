@@ -16,10 +16,10 @@ MoviesMenu::MoviesMenu(Application *application, const char *title, const char *
 
   for (int i=0; i < m_files.size(); i++) {
     if (m_files[i].isDirectory()) {
-      add(new ArrowMenuItem(m_files[i].name(), m_cb));
+      add(new ArrowMenuItem(m_files[i].name(), m_cb, "images/unknown_movie.png", 150, 45));
     }
     else {
-      add(new MenuItem(m_files[i].name(), m_cb));
+      add(new MenuItem(m_files[i].name(), m_cb, "images/unknown_movie.png", 150, 45));
     }
   }
 }
