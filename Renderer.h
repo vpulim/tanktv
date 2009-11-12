@@ -27,6 +27,7 @@ struct Image
 
 typedef std::map<unsigned, Image *> image_map;
 typedef std::map<unsigned, Font *> font_map;
+typedef enum { JUSTIFY_LEFT, JUSTIFY_RIGHT, JUSTIFY_CENTER } FontJustify;
 
 class Renderer
 {
@@ -49,12 +50,14 @@ class Renderer
   void init();
   void destroy();
   void scale(int *x) { *x = (int)(*x * m_scale); }
+  void unscale(int *x) { *x = (int)(*x / m_scale); }
 
  public:
   Renderer(int argc, char **argv);
   ~Renderer();
   bool initialized() { return m_initialized; }
   IDirectFBSurface *surface() { return m_surface; }
+  IDirectFBSurface *createSurface(DFBSurfaceDescription *dsc);
   IDirectFBSurface *createSurface(int width, int height, int pixelformat);
   void exit() { m_exit = true; }
   int width() { return m_width; }
@@ -66,7 +69,8 @@ class Renderer
   Image *loadImage(const char *path);
   void image(int x, int y, const char *path, bool blend = false);
   void font(const char *path, int size = 32);
-  void text(int x, int y, const char *str, int max_width = 0);
+  int textWidth(const char *str);
+  void text(int x, int y, const char *str, int max_width = 0, FontJustify justify = JUSTIFY_LEFT, bool hardclip = false);
   void flip();
   void play(const char *file);
 };

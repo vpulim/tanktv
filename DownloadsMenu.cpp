@@ -16,10 +16,10 @@ DownloadsMenu::DownloadsMenu(Application *application, const char *title, const 
 
   for (int i=0; i < m_files.size(); i++) {
     if (m_files[i].isDirectory()) {
-      add(new ArrowMenuItem(m_files[i].name(), m_cb));
+      new ArrowMenuItem(this, m_files[i].name(), m_cb);
     }
     else {
-      add(new MenuItem(m_files[i].name(), m_cb));
+      new MenuItem(this, m_files[i].name(), m_cb);
     }
   }
 }

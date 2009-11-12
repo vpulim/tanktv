@@ -6,6 +6,7 @@
 #include <vector>
 
 #define MAX_MENU_ITEMS 1000
+#define MENU_X 675
 
 class Menu;
 class MenuItem;
@@ -19,6 +20,10 @@ class Menu : public Screen
   int m_size;
   int m_current;
   int m_top;
+  bool m_refreshed;
+
+ private:
+  void paintBackground();
 
  public:
   Menu(Application *application, const char *title);
@@ -26,6 +31,7 @@ class Menu : public Screen
   int current() { return m_current; }
   void add(MenuItem *menuItem);
   virtual bool handleEvent(Event &event);  
+  virtual bool handleIdle();  
   virtual void paint();
 };
 

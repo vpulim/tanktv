@@ -8,6 +8,7 @@
 #include <mpg123.h>
 #include "config.h"
 
+#define PLUGIN "/share/Apps/TankTV/lib/smp86xx_plugin.so"
 #define GError void
 
 struct block_param {

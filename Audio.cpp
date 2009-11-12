@@ -5,9 +5,6 @@
 #include <dlfcn.h>
 #include "Audio.h"
 
-#define PLUGIN "/share/Apps/TankTV/lib/smp86xx_plugin.so"
-#define GError void
-
 Audio::Audio()
   : m_audio(NULL),
     m_plugin(NULL),

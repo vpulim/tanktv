@@ -5,10 +5,17 @@ Application::Application(Renderer *renderer, Audio *audio)
     m_audio(audio)
 {
   Renderer *r = renderer;
-  r->color(0x80, 0x80, 0x80, 0xff);
+  r->color(0, 0, 0, 0xff);
   r->rect(0, 0, r->width(), r->height());
-  r->image(560, 335, "images/logo.png", true);
+  r->color(0xff, 0xff, 0xff, 0xff);
+  r->font("fonts/bold_small.ttf", 42);
+  r->text(640, 378, "tankTV", 0, JUSTIFY_CENTER);
+  r->color(0xcc, 0xcc, 0xcc, 0xff);
+  r->font("fonts/regular_small.ttf", 18);
+  r->text(640, 420, "loading...", 0, JUSTIFY_CENTER);
+  //  r->image(560, 335, "images/logo.png", true);
   r->flip();  
+  /*
   r->loadImage("images/arrow.png");
   r->loadImage("images/arrow_on.png");
   r->loadImage("images/fade_bot.png");
@@ -22,11 +29,11 @@ Application::Application(Renderer *renderer, Audio *audio)
   r->loadImage("images/settings.png");
   r->loadImage("images/unknown_movie.png");
   r->loadImage("images/unknown_album.png");
-  r->font("fonts/LucidaSansDemiboldRoman.ttf", 18);
-  r->font("fonts/LucidaSansDemiboldRoman.ttf", 29);
-  r->font("fonts/LucidaSansDemiboldRoman.ttf", 37);
-  r->font("fonts/LucidaSansDemiboldRoman.ttf", 42);
-  r->font("fonts/LucidaSansRegular.ttf", 29);
+  */
+  r->font(BOLD_FONT, 18);
+  r->font(BOLD_FONT, 29);
+  r->font(BOLD_FONT, 37);
+  r->font(REGULAR_FONT, 29);
   r->color(0x0, 0x0, 0x0, 0xff);
   r->rect(0, 0, r->width(), r->height());
   r->flip();  

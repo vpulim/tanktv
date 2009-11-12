@@ -29,8 +29,15 @@ Renderer::~Renderer()
 {
   if (m_initialized) destroy();
   for (image_map::const_iterator i=m_image_cache.begin(); i != m_image_cache.end(); i++) {
-    if (i->second && i->second->dsc.preallocated[0].data)
-      free(i->second->dsc.preallocated[0].data);
+    Image *image = i->second;
+    if (image) {
+      if (image->dsc.preallocated[0].data)
+	free(image->dsc.preallocated[0].data);
+      delete image;    
+    }
+  }
+  for (font_map::const_iterator i=m_font_cache.begin(); i != m_font_cache.end(); i++) {
+    if (i->second) delete i->second;    
   }
   Font::finish();
 }
@@ -98,9 +105,8 @@ void Renderer::destroy()
   }
 
   for (font_map::const_iterator i=m_font_cache.begin(); i != m_font_cache.end(); i++) {
-    if (i->second) delete i->second;    
+    if (i->second) i->second->clearCache();    
   }
-  m_font_cache.clear();
 
   m_input->Release(m_input);
   m_surface->Release(m_surface);
@@ -130,6 +136,16 @@ void Renderer::loop(EventListener *listener)
     }
     if (!listener->handleIdle()) m_exit = true;
   }    
+}
+
+IDirectFBSurface *Renderer::createSurface(DFBSurfaceDescription *dsc)
+{
+  IDirectFBSurface *surface = NULL;
+  if (m_dfb->CreateSurface(m_dfb, dsc, &surface) != DFB_OK) {
+    fprintf(stderr, "Error creating surface2!\n");
+    surface = NULL;
+  }
+  return surface;  
 }
  
 IDirectFBSurface *Renderer::createSurface(int width, int height, int pixelFormat)
@@ -192,18 +208,19 @@ Image *Renderer::loadImage(const char *path)
       if (provider->GetSurfaceDescription(provider, &dsc) == DFB_OK) {
 	scale(&(dsc.width));
 	scale(&(dsc.height));
-	if (m_dfb->CreateSurface(m_dfb, &dsc, &image->surface) == DFB_OK) {
+	if ((image->surface = createSurface(&dsc))) {
 	  void *data;
 	  int pitch;
 	  provider->RenderTo(provider, image->surface, NULL);
 	  dsc.flags = (DFBSurfaceDescriptionFlags)(dsc.flags | DSDESC_PREALLOCATED);
 	  image->surface->Lock(image->surface, DSLF_READ, &data, &pitch);
-	  dsc.preallocated[0].data = malloc(pitch * dsc.height);
-	  memcpy(dsc.preallocated[0].data, data, pitch * dsc.height);
+ 	  if ((dsc.preallocated[0].data = malloc(pitch * dsc.height))) {
+	    memcpy(dsc.preallocated[0].data, data, pitch * dsc.height);
+	    dsc.preallocated[0].pitch = pitch;
+	    dsc.preallocated[1].data = NULL;
+	    dsc.preallocated[1].pitch = 0;
+	  }
 	  image->surface->Unlock(image->surface);
-	  dsc.preallocated[0].pitch = pitch;
-	  dsc.preallocated[1].data = NULL;
-	  dsc.preallocated[1].pitch = 0;
 	}
 	else {
 	  debug("CreateSurface failed\n");
@@ -285,7 +302,16 @@ void Renderer::font(const char *path, int size)
   m_font = m_font_cache[key];
 }
 
-void Renderer::text( int x, int y, const char *text, int max_width)
+int Renderer::textWidth(const char *str)
+{
+  if (!m_font) return 0;
+
+  int width = m_font->width(str);
+  unscale(&width);
+  return width;
+}
+
+void Renderer::text( int x, int y, const char *text, int max_width, FontJustify justify, bool hardclip)
 {
   if (!m_font) return;
 
@@ -293,5 +319,5 @@ void Renderer::text( int x, int y, const char *text, int max_width)
   scale(&y);
   scale(&max_width);
   
-  m_font->draw(x, y, text, max_width);
+  m_font->draw(x, y, text, max_width, justify, hardclip);
 }

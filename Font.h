@@ -6,10 +6,12 @@
 #include "config.h"
 #include "Renderer.h"
 
+#define MAX_TEXT_LENGTH 2048
 
 struct Glyph
 {
   IDirectFBSurface *surface;
+  DFBSurfaceDescription dsc;
   int left;
   int top;
   int advance_x;
@@ -29,6 +31,7 @@ class Font
 
  private:
   Glyph *getGlyph(int index);
+  int getWidth(long *ucs, int *ucs_length, int max_width=0, bool hardclip=false);
 
  public:
   Font(Renderer *renderer, const char *path, int size);
@@ -36,7 +39,9 @@ class Font
   static void init();
   static void finish();
   bool isValid() { return m_face != NULL; }
-  void draw(int x, int y, const char *text, int width=0);
+  void draw(int x, int y, const char *text, int width=0, FontJustify justify=JUSTIFY_LEFT, bool hardclip=false);
+  int width(const char *text);
+  void clearCache();
 };
 
 #endif
