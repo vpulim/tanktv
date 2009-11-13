@@ -20,6 +20,7 @@ SOURCES = Main.cpp \
 	Menu.cpp \
 	MenuItem.cpp \
 	MainMenu.cpp \
+	MediaMenu.cpp \
 	MusicMenu.cpp \
 	DownloadsMenu.cpp \
 	SettingsMenu.cpp \

@@ -1,13 +1,13 @@
 #include <string.h>
 #include "Menu.h"
 
-MenuItem::MenuItem(Menu *menu, const char *label, MenuItemCallback callback, const char *image, int x, int y)
+MenuItem::MenuItem(Menu *menu, const char *label, const char *image, int x, int y)
   : Widget(menu),
-    m_cb(callback),
     m_index(-1),
     m_x(x),
     m_y(y),
-    m_offset(0)
+    m_offset(0),
+    m_menu(menu)
 {
   setLabel(label);
   m_label_width = m_app->renderer()->textWidth(label);
@@ -17,19 +17,18 @@ MenuItem::MenuItem(Menu *menu, const char *label, MenuItemCallback callback, con
   else
     m_image[0] = 0;
   resize(465, 50);
-  menu->add(this);
+  m_menu->add(this);
 }
 
 bool MenuItem::hasFocus()
 {
-  return m_parent && m_index == ((Menu *)m_parent)->current();
+  return m_parent && m_index == m_menu->current();
 }
 
 void MenuItem::select()
 {
   m_offset=0;
-  if (m_cb)
-    m_cb((Menu *)m_parent, this);
+  m_menu->selectItem(this);
 }
 
 void MenuItem::paint()
@@ -72,8 +71,8 @@ void MenuItem::paint()
   }
 }
 
-ArrowMenuItem::ArrowMenuItem(Menu *menu, const char *label, MenuItemCallback callback, const char *image, int x, int y)
-  : MenuItem(menu, label, callback, image, x, y)
+ArrowMenuItem::ArrowMenuItem(Menu *menu, const char *label, const char *image, int x, int y)
+  : MenuItem(menu, label, image, x, y)
 {
 }
 

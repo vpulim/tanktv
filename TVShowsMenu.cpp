@@ -3,43 +3,18 @@
 #include <algorithm>
 
 TVShowsMenu::TVShowsMenu(Application *application, const char *title, const char *path)
-  : Menu(application, title)
+  : MediaMenu(application, title, path)
 {
-  if (path) {
-    File::listDirectory(path, m_files);
-  }
-  else {
-    File::listDirectory("/share/Video/TV Shows", m_files);
-  }
-
-  std::sort(m_files.begin(), m_files.end());
-
-  for (int i=0; i < m_files.size(); i++) {
-    if (m_files[i].isDirectory()) {
-      new ArrowMenuItem(this, m_files[i].name(), m_cb);
-    }
-    else {
-      new MenuItem(this, m_files[i].name(), m_cb);
-    }
-  }
 }
 
-void TVShowsMenu::m_cb(Menu *m, MenuItem *menuItem)
+void TVShowsMenu::selectFile(File &file)
 {
-  TVShowsMenu *menu = (TVShowsMenu *)m;
-  Application *app = menu->application();
-  if (menu) {
-    Renderer *r = app->renderer();
-    File &file = menu->m_files[menuItem->index()];
-    const char *path = file.path();
+  if (!m_app->audio()->isStopped()) m_app->audio()->close();
+  debug("playing %s\n", file.path());
+  m_app->renderer()->play(file.path());
+}
 
-    if (file.isDirectory()) {
-      app->go(new TVShowsMenu(app, file.name(), path));      
-    }
-    else {
-      if (!app->audio()->isStopped()) app->audio()->close();
-      debug("playing %s\n", path);
-      r->play(path);
-    }
-  }
+void TVShowsMenu::selectDirectory(File &file)
+{
+  m_app->go(new TVShowsMenu(m_app, file.name(), file.path()));      
 }

@@ -60,6 +60,13 @@ void Application::run()
   }
 }
 
+void Application::exit()
+{
+  if (m_renderer->initialized()) {
+    m_renderer->exit();
+  }
+}
+
 void Application::go(Screen *screen) 
 { 
   m_stack.push(screen); 

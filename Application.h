@@ -39,6 +39,7 @@ class Application : public EventListener
   void go(Screen *screen);
   void back();
   void run();
+  void exit();
   Renderer *renderer() { return m_renderer; }
   Audio *audio() { return m_audio; }
 };

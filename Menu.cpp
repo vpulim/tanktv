@@ -7,7 +7,8 @@ Menu::Menu(Application *application, const char *title)
     m_size(0),
     m_current(-1),
     m_top(180),
-    m_refreshed(false)
+    m_dirty_back_buffer(true),
+    m_dirty_details(true)
 {  
   setLabel(title);
 }
@@ -22,7 +23,7 @@ Menu::~Menu()
 void Menu::add(MenuItem *menuItem)
 {
   if (m_size < MAX_MENU_ITEMS) {
-    menuItem->m_index = m_size;
+    menuItem->setIndex(m_size);
     m_menuitems[m_size++] = menuItem;
   }
   if (m_size == 1) m_current = 0;
@@ -51,27 +52,43 @@ bool Menu::handleEvent(Event &event)
     }
     break;
   }
-  m_refreshed = false;
+  debug("current item: %s\n", m_menuitems[m_current]->label());
+  m_dirty_back_buffer = true;
+  m_dirty_details = true;
   return true;
 }
 
 bool Menu::handleIdle()
 {
-  Renderer *r = m_app->renderer();
+  if (m_dirty_details) {
+    m_dirty_details = !paintDetails();
+  }
+
+  if (m_dirty_back_buffer) {
+    paint();
+    m_dirty_back_buffer = false;
+  }
+
   if (m_current > -1) {
     MenuItem *mi = m_menuitems[m_current];
     if (mi->dirty()) {
-      if (!m_refreshed) {
-	paint();
-	m_refreshed = true;
-      }
       paintBackground();
       mi->paint();
-      r->flip();
+      m_app->renderer()->flip();
     }
   }
   return true;
 }
+
+bool Menu::paintDetails()
+{
+  return true;
+}
+
+void Menu::selectItem(MenuItem *menuItem)
+{
+}
+
 
 void Menu::paintBackground()
 {

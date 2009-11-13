@@ -20,7 +20,8 @@ class Menu : public Screen
   int m_size;
   int m_current;
   int m_top;
-  bool m_refreshed;
+  bool m_dirty_back_buffer;
+  bool m_dirty_details;
 
  private:
   void paintBackground();
@@ -30,8 +31,10 @@ class Menu : public Screen
   virtual ~Menu();
   int current() { return m_current; }
   void add(MenuItem *menuItem);
+  virtual void selectItem(MenuItem *menuItem);
   virtual bool handleEvent(Event &event);  
   virtual bool handleIdle();  
+  virtual bool paintDetails();
   virtual void paint();
 };
 
@@ -39,54 +42,57 @@ class Menu : public Screen
 
 class MainMenu : public Menu
 {
- private:
-  static void m_cb(Menu *menu, MenuItem *menuItem);
-
  public:
   MainMenu(Application *application);
+  virtual void selectItem(MenuItem *menuItem);
 };
 
-class MoviesMenu : public Menu
+class MediaMenu : public Menu
 {
  private:
   std::vector<class File> m_files;
-  static void m_cb(Menu *menu, MenuItem *menuItem);
 
  public:
-  MoviesMenu(Application *application, const char *title="Movies", const char *path=NULL);
+  MediaMenu(Application *application, const char *title="Media", const char *path=NULL);
+  virtual ~MediaMenu();
+  virtual void selectItem(MenuItem *menuItem);
+  virtual void selectFile(File &file);
+  virtual void selectDirectory(File &file);
 };
 
-class TVShowsMenu : public Menu
+class MoviesMenu : public MediaMenu
 {
- private:
-  std::vector<class File> m_files;
-  static void m_cb(Menu *menu, MenuItem *menuItem);
-
  public:
-  TVShowsMenu(Application *application, const char *title="TV Shows", const char *path=NULL);
+  MoviesMenu(Application *application, const char *title="Movies", const char *path="/share/Video/Movies");
+  virtual void selectFile(File &file);
+  virtual void selectDirectory(File &file);
 };
 
-class DownloadsMenu : public Menu
+class TVShowsMenu : public MediaMenu
 {
- private:
-  std::vector<class File> m_files;
-  static void m_cb(Menu *menu, MenuItem *menuItem);
-
  public:
-  DownloadsMenu(Application *application, const char *title="Downloads", const char *path=NULL);
+  TVShowsMenu(Application *application, const char *title="TV Shows", const char *path="/share/Video/TV Shows");
+  virtual void selectFile(File &file);
+  virtual void selectDirectory(File &file);
+};
+
+class DownloadsMenu : public MediaMenu
+{
+ public:
+  DownloadsMenu(Application *application, const char *title="Downloads", const char *path="/share/Download");
+  virtual void selectFile(File &file);
+  virtual void selectDirectory(File &file);
 };
 
 class Audio;
 
-class MusicMenu : public Menu
+class MusicMenu : public MediaMenu
 {
- private:
-  std::vector<class File> m_files;
-  static void m_cb(Menu *menu, MenuItem *menuItem);
-
  public:
-  MusicMenu(Application *application, const char *title="Music", const char *path=NULL);
-  virtual ~MusicMenu();
+  MusicMenu(Application *application, const char *title="Music", const char *path="/share/Music");
+  virtual void selectFile(File &file);
+  virtual void selectDirectory(File &file);
+  virtual bool paintDetails();
 };
 
 class SettingsMenu : public Menu

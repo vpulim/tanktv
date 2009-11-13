@@ -4,40 +4,36 @@ MainMenu::MainMenu(Application *application)
   : Menu(application, "tankTV")
 {
   m_top = 200;
-  new ArrowMenuItem(this, "Movies", m_cb, "images/movies.png");
-  new ArrowMenuItem(this, "TV Shows", m_cb, "images/tvshows.png");
-  new ArrowMenuItem(this, "Music", m_cb, "images/music.png");
-  new ArrowMenuItem(this, "Downloads", m_cb, "images/movies.png");
-  new ArrowMenuItem(this, "Settings", m_cb, "images/settings.png");
+  new ArrowMenuItem(this, "Movies", "images/movies.png");
+  new ArrowMenuItem(this, "TV Shows", "images/tvshows.png");
+  new ArrowMenuItem(this, "Music", "images/music.png");
+  new ArrowMenuItem(this, "Downloads", "images/movies.png");
+  new ArrowMenuItem(this, "Settings", "images/settings.png");
 
-  new MenuItem(this, "Exit", m_cb);
+  new MenuItem(this, "Exit");
 }
 
-void MainMenu::m_cb(Menu *menu, MenuItem *menuItem)
+void MainMenu::selectItem(MenuItem *menuItem)
 {
-  if (menu) {
-    Application *app = menu->application();
-    Renderer *r = app->renderer();
-    debug("in MainMenu::m_cb\n");
-    switch (menuItem->index()) {
-    case 0:
-      app->go(new MoviesMenu(app));
-      break;
-    case 1:
-      app->go(new TVShowsMenu(app));
-      break;
-    case 2:
-      app->go(new MusicMenu(app));
-      break;
-    case 3:
-      app->go(new DownloadsMenu(app));
-      break;
-    case 4:
-      app->go(new SettingsMenu(app));
-      break;
-    case 5: 
-      menu->application()->renderer()->exit();
-      break;
-    }
+  debug("in MainMenu::m_cb\n");
+  switch (menuItem->index()) {
+  case 0:
+    m_app->go(new MoviesMenu(m_app));
+    break;
+  case 1:
+    m_app->go(new TVShowsMenu(m_app));
+    break;
+  case 2:
+    m_app->go(new MusicMenu(m_app));
+    break;
+  case 3:
+    m_app->go(new DownloadsMenu(m_app));
+    break;
+  case 4:
+    m_app->go(new SettingsMenu(m_app));
+    break;
+  case 5: 
+    m_app->exit();
+    break;
   }
 }

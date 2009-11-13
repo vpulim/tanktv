@@ -3,43 +3,18 @@
 #include <algorithm>
 
 MoviesMenu::MoviesMenu(Application *application, const char *title, const char *path)
-  : Menu(application, title)
+  : MediaMenu(application, title, path)
 {
-  if (path) {
-    File::listDirectory(path, m_files);
-  }
-  else {
-    File::listDirectory("/share/Video/Movies", m_files);
-  }
-
-  std::sort(m_files.begin(), m_files.end());
-
-  for (int i=0; i < m_files.size(); i++) {
-    if (m_files[i].isDirectory()) {
-      new ArrowMenuItem(this, m_files[i].name(), m_cb, "images/unknown_movie.png", 150, 45);
-    }
-    else {
-      new MenuItem(this, m_files[i].name(), m_cb, "images/unknown_movie.png", 150, 45);
-    }
-  }
 }
 
-void MoviesMenu::m_cb(Menu *m, MenuItem *menuItem)
+void MoviesMenu::selectFile(File &file)
 {
-  MoviesMenu *menu = (MoviesMenu *)m;
-  Application *app = menu->application();
-  if (menu) {
-    Renderer *r = app->renderer();
-    File &file = menu->m_files[menuItem->index()];
-    const char *path = file.path();
+  if (!m_app->audio()->isStopped()) m_app->audio()->close();
+  debug("playing %s\n", file.path());
+  m_app->renderer()->play(file.path());
+}
 
-    if (file.isDirectory()) {
-      app->go(new MoviesMenu(app, file.name(), path));      
-    }
-    else {
-      if (!app->audio()->isStopped()) app->audio()->close();
-      debug("playing %s\n", path);
-      r->play(path);
-    }
-  }
+void MoviesMenu::selectDirectory(File &file)
+{
+  m_app->go(new MoviesMenu(m_app, file.name(), file.path()));      
 }
