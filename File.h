@@ -10,12 +10,21 @@ class File
   File(const char *name, const char *path, bool isDirectory=false);
   char m_name[256];
   char m_path[1024];
+  char m_ext[10];
   bool m_isdir;
 
+ private:
+  static const char *extension(const char *name, char *dst);
+  static bool isAudio(const char *ext);
+  static bool isVideo(const char *ext);
+
  public:
-  static void listDirectory(const char *dir, std::vector<File> &files);
+  static void listDirectory(const char *dir, std::vector<File> &files, bool mediaOnly=true);
   const char *name() const { return m_name; }
   const char *path() const { return m_path; }
+  const char *extension();
+  bool isAudio();
+  bool isVideo();
   bool isDirectory() { return m_isdir; }
 };
 

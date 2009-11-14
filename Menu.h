@@ -47,52 +47,17 @@ class MainMenu : public Menu
   virtual void selectItem(MenuItem *menuItem);
 };
 
-class MediaMenu : public Menu
+class FileMenu : public Menu
 {
  private:
   std::vector<class File> m_files;
 
  public:
-  MediaMenu(Application *application, const char *title="Media", const char *path=NULL);
-  virtual ~MediaMenu();
+  FileMenu(Application *application, const char *title="Media", const char *path=NULL);
+  virtual ~FileMenu();
   virtual void selectItem(MenuItem *menuItem);
   virtual void selectFile(File &file);
   virtual void selectDirectory(File &file);
-};
-
-class MoviesMenu : public MediaMenu
-{
- public:
-  MoviesMenu(Application *application, const char *title="Movies", const char *path="/share/Video/Movies");
-  virtual void selectFile(File &file);
-  virtual void selectDirectory(File &file);
-};
-
-class TVShowsMenu : public MediaMenu
-{
- public:
-  TVShowsMenu(Application *application, const char *title="TV Shows", const char *path="/share/Video/TV Shows");
-  virtual void selectFile(File &file);
-  virtual void selectDirectory(File &file);
-};
-
-class DownloadsMenu : public MediaMenu
-{
- public:
-  DownloadsMenu(Application *application, const char *title="Downloads", const char *path="/share/Download");
-  virtual void selectFile(File &file);
-  virtual void selectDirectory(File &file);
-};
-
-class Audio;
-
-class MusicMenu : public MediaMenu
-{
- public:
-  MusicMenu(Application *application, const char *title="Music", const char *path="/share/Music");
-  virtual void selectFile(File &file);
-  virtual void selectDirectory(File &file);
-  virtual bool paintDetails();
 };
 
 class SettingsMenu : public Menu

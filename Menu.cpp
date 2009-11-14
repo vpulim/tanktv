@@ -52,7 +52,7 @@ bool Menu::handleEvent(Event &event)
     }
     break;
   }
-  debug("current item: %s\n", m_menuitems[m_current]->label());
+  if (m_current > -1) debug("current item: %s\n", m_menuitems[m_current]->label());
   m_dirty_back_buffer = true;
   m_dirty_details = true;
   return true;
@@ -110,14 +110,19 @@ void Menu::paintBackground()
 
 void Menu::paint()
 {
+  int start = 0, end = 0;
+  int x = MENU_X;
+  Renderer *r = m_app->renderer();
+  
+  r->color(0, 0, 0, 0xff);
+  r->rect(0, 0, r->width(), r->height());
+  
+  r->font(BOLD_FONT, 37);
+  r->color(0xff, 0xff, 0xff, 0xff);
+  r->text(x + 222, m_top - 40, m_label, 445, JUSTIFY_CENTER);
+
   if (m_current > -1) {
-    int start = 0, end = 0;
-    int x = MENU_X, y, height = m_menuitems[0]->box().h;
-    Renderer *r = m_app->renderer();
-
-    r->color(0, 0, 0, 0xff);
-    r->rect(0, 0, r->width(), r->height());
-
+    int y, height = m_menuitems[0]->box().h;
     if (m_current > m_size - 5) {
       start = max(0, m_size - 9);
     }
@@ -126,9 +131,6 @@ void Menu::paint()
     }
     end = min(m_size-1, start + 9);
     
-    r->font(BOLD_FONT, 37);
-    r->color(0xff, 0xff, 0xff, 0xff);
-    r->text(x + 222, m_top - 40, m_label, 445, JUSTIFY_CENTER);
     
     paintBackground();
 
@@ -144,7 +146,6 @@ void Menu::paint()
 	r->image(x - 32, m_top + y - 18, "images/fade_bot.png", true);  
       }
     }
-
-    r->flip();
   }
+  r->flip();
 }

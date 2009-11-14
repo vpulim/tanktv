@@ -3,7 +3,7 @@
 #include <algorithm>
 
 MoviesMenu::MoviesMenu(Application *application, const char *title, const char *path)
-  : MediaMenu(application, title, path)
+  : FileMenu(application, title, path)
 {
 }
 

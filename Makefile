@@ -1,8 +1,8 @@
 ifeq ($(CXX), cc)
 CXX=g++
 endif
-CFLAGS=`pkg-config directfb freetype2 --cflags`
-LDFLAGS=`pkg-config directfb freetype2 --libs` -ldl -lmpg123
+CFLAGS=`pkg-config directfb freetype2 taglib --cflags`
+LDFLAGS=`pkg-config directfb freetype2 taglib --libs` -ldl -lmpg123
 
 SOURCES = Main.cpp \
 	Utils.cpp \
@@ -20,12 +20,8 @@ SOURCES = Main.cpp \
 	Menu.cpp \
 	MenuItem.cpp \
 	MainMenu.cpp \
-	MediaMenu.cpp \
-	MusicMenu.cpp \
-	DownloadsMenu.cpp \
-	SettingsMenu.cpp \
-	MoviesMenu.cpp \
-	TVShowsMenu.cpp 
+	FileMenu.cpp \
+	SettingsMenu.cpp
 
 OBJECTS = $(SOURCES:.cpp=.o)
 APP = nmti
