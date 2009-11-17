@@ -4,6 +4,7 @@
 #include "config.h"
 #include <directfb.h>
 #include <map>
+#include "Box.h"
 #include "Event.h"
 #include "ImageLoader.h"
 
@@ -49,8 +50,8 @@ class Renderer
  private:
   void init();
   void destroy();
-  void scale(int *x) { *x = (int)(*x * m_scale); }
-  void unscale(int *x) { *x = (int)(*x / m_scale); }
+  void scale(int *x) { *x = (int)(*x * m_scale - 0.5); }
+  void unscale(int *x) { *x = (int)(*x / m_scale + 0.5); }
 
  public:
   Renderer(int argc, char **argv);
@@ -64,6 +65,8 @@ class Renderer
   int height() { return m_height; }
   void loop(EventListener *listener);
   void color(unsigned char r, unsigned char g, unsigned char b, unsigned char alpha);
+  void setClip(Box *box);
+  void getClip(Box *box);
   void rect(int x, int y, int w, int h);
   void line(int x1, int y1, int x2, int y2, bool blend = false);
   Image *loadImage(const char *path);

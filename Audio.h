@@ -68,7 +68,11 @@ class Audio
   mpg123_handle *m_mpg123;
   mpg123_id3v1 *m_v1;
   mpg123_id3v2 *m_v2;
-  char **m_icy;
+  char m_title[256];
+  char m_album[256];
+  char m_artist[256];
+  char m_genre[256];
+  int m_length;
 
  private:
   static void *play_thread(void *arg);
@@ -77,7 +81,7 @@ class Audio
  public:
   Audio();
   ~Audio();
-  bool open(const char *file);
+  bool open(const char *path, const char *artist, const char *album, const char *title, const char *genre, int length=0);
   void close();
   void play();
   void pause();

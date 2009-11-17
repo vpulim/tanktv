@@ -70,13 +70,31 @@ bool Menu::handleIdle()
   }
 
   if (m_current > -1) {
-    MenuItem *mi = m_menuitems[m_current];
-    if (mi->dirty()) {
-      paintBackground();
-      mi->paint();
-      m_app->renderer()->flip();
+    int start, end;
+    bool flip = false, paintCurrent = false;
+    getVisibleRange(&start, &end);        
+    for (int i=start; i<=end; i++) {
+      MenuItem *mi = m_menuitems[i];
+      if (mi->handleIdle()) {
+	if (i == m_current-1 || i == m_current+1)
+	  paintCurrent = true;
+	else {
+	  paintBackground(start, end, i, true);
+	  mi->paint();
+	}
+	flip = true;
+      }
     }
+    if (paintCurrent) {
+      paintBackground(start, end, m_current-1, true);      
+      paintBackground(start, end, m_current+1, true);      
+      paintBackground(start, end, m_current, true);      
+      for (int i=m_current-1; i <= m_current+1; i++)
+	if (i >= 0 && i < m_size) m_menuitems[i]->paint();
+    }
+    if (flip) m_app->renderer()->flip();
   }
+
   return true;
 }
 
@@ -89,53 +107,56 @@ void Menu::selectItem(MenuItem *menuItem)
 {
 }
 
-
-void Menu::paintBackground()
+void Menu::getVisibleRange(int *start, int *end)
 {
-  if (m_current > -1) {
-    int start = 0;
+  *start = 0;
+  if (m_current > m_size - 5) {
+    *start = max(0, m_size - 9);
+  }
+  else if (m_current > 4) {
+    *start = m_current - 4;
+  }
+  *end = min(m_size-1, *start + 9);
+}
+
+void Menu::paintBackground(int start, int end, int index, bool eraseOld)
+{
+  if (index >= start && index <= end) {
     int x = MENU_X, height = m_menuitems[0]->box().h;
     Renderer *r = m_app->renderer();
 
-    if (m_current > m_size - 5) {
-      start = max(0, m_size - 9);
+    if (index == m_current) {
+      r->image(x - 32, m_top + (index - start) * height - 8, "images/menuitem_bg.png");  
     }
-    else if (m_current > 4) {
-      start = m_current - 4;
-    }    
-    r->image(x - 32, m_top + (m_current - start) * height - 8, "images/menuitem_bg.png");  
-    r->font(BOLD_FONT, 29);
+    else if (eraseOld) {
+      r->color(0, 0, 0, 0xff);
+      r->rect(x - 32, m_top + (index - start) * height - 8, 528, 65);
+    }
   }
 }
 
 void Menu::paint()
 {
-  int start = 0, end = 0;
   int x = MENU_X;
   Renderer *r = m_app->renderer();
-  
+    
   r->color(0, 0, 0, 0xff);
-  r->rect(0, 0, r->width(), r->height());
+  r->rect(0, 0, r->width(), r->height());  
   
   r->font(BOLD_FONT, 37);
   r->color(0xff, 0xff, 0xff, 0xff);
   r->text(x + 222, m_top - 40, m_label, 445, JUSTIFY_CENTER);
 
   if (m_current > -1) {
-    int y, height = m_menuitems[0]->box().h;
-    if (m_current > m_size - 5) {
-      start = max(0, m_size - 9);
-    }
-    else if (m_current > 4) {
-      start = m_current - 4;
-    }
-    end = min(m_size-1, start + 9);
-    
-    
-    paintBackground();
+
+    int start, end, y, height = m_menuitems[0]->box().h;
+
+    getVisibleRange(&start, &end);        
 
     for (int i=start; i<=end; i++) {
       MenuItem *mi = m_menuitems[i];
+
+      paintBackground(start, end, i);
       y = (i - start) * height;
       mi->move(x, m_top + y);
       mi->paint();

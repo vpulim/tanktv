@@ -171,6 +171,30 @@ void Renderer::color(unsigned char r, unsigned char g, unsigned char b, unsigned
   m_surface->SetColor(m_surface, r & 0xff, g & 0xff, b & 0xff, a & 0xff);
 }
 
+void Renderer::setClip(Box *box)
+{
+  DFBRegion clip = {box->x, box->y, box->x + box->w - 1, box->y + box->h - 1};  
+  scale(&clip.x1);
+  scale(&clip.x2);
+  scale(&clip.y1);
+  scale(&clip.y2);
+  m_surface->SetClip(m_surface, &clip);
+}
+
+void Renderer::getClip(Box *box)
+{
+  DFBRegion clip;
+  m_surface->GetClip(m_surface, &clip);
+  unscale(&clip.x1);
+  unscale(&clip.x2);
+  unscale(&clip.y1);
+  unscale(&clip.y2);
+  box->x = clip.x1;
+  box->y = clip.y1;
+  box->w = clip.x2-clip.x1+1;
+  box->h = clip.y2-clip.y1+1;
+}
+
 void Renderer::rect(int x, int y, int w, int h)
 {
   scale(&x);

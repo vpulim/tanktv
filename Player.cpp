@@ -41,6 +41,10 @@ bool Player::handleIdle()
 
   r->color(0x0, 0x0, 0x0, 0xff);
   r->rect(570, 420, 620, 175);
+
+  if (a->isStopped()) {
+    return false;
+  }
   if (!a->isStopped()) {
     r->color(0xff, 0xff, 0xff, 0xff);
     r->font(BOLD_FONT, 37);
@@ -65,10 +69,6 @@ bool Player::handleIdle()
     r->image(633 + progress, 575, "images/position_knob.png", true);
 
     r->flip();  
-    if (a->remaining() == 0) {
-      a->close();
-      return false;
-    }
   }
 
   return true;

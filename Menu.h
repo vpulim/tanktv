@@ -1,9 +1,10 @@
 #ifndef MENU_H
 #define MENU_H
 
+#include <pthread.h>
+#include <vector>
 #include "Screen.h"
 #include "Application.h"
-#include <vector>
 
 #define MAX_MENU_ITEMS 1000
 #define MENU_X 675
@@ -24,7 +25,8 @@ class Menu : public Screen
   bool m_dirty_details;
 
  private:
-  void paintBackground();
+  void getVisibleRange(int *start, int *end);
+  void paintBackground(int start, int end, int index, bool eraseOld=false);
 
  public:
   Menu(Application *application, const char *title);
@@ -55,16 +57,12 @@ class FileMenu : public Menu
  public:
   FileMenu(Application *application, const char *title="Media", const char *path=NULL);
   virtual ~FileMenu();
-  virtual void selectItem(MenuItem *menuItem);
-  virtual void selectFile(File &file);
-  virtual void selectDirectory(File &file);
 };
 
 class SettingsMenu : public Menu
 {
  public:
   SettingsMenu(Application *application);
-  virtual void paint();
 };
 
 #endif

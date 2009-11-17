@@ -5,6 +5,7 @@
 #include "Screen.h"
 #include "Renderer.h"
 #include "Audio.h"
+#include "Database.h"
 
 #define MAX_STACK_SIZE 100
 
@@ -27,6 +28,7 @@ class Application : public EventListener
  private:
   Renderer *m_renderer;
   Audio *m_audio;
+  Database *m_db;
   Stack m_stack;
 
  protected:
@@ -34,7 +36,7 @@ class Application : public EventListener
   bool handleIdle();
 
  public: 
-  Application(Renderer *renderer, Audio *audio);
+  Application(Renderer *renderer, Audio *audio, Database *database);
   void setScreen(Screen *screen);
   void go(Screen *screen);
   void back();
@@ -42,6 +44,7 @@ class Application : public EventListener
   void exit();
   Renderer *renderer() { return m_renderer; }
   Audio *audio() { return m_audio; }
+  Database *database() { return m_db; }
 };
 
 #endif

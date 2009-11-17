@@ -1,8 +1,9 @@
 #include "Application.h"
 
-Application::Application(Renderer *renderer, Audio *audio)
+Application::Application(Renderer *renderer, Audio *audio, Database *database)
   : m_renderer(renderer),
-    m_audio(audio)
+    m_audio(audio),
+    m_db(database)
 {
   Renderer *r = renderer;
   r->color(0, 0, 0, 0xff);
@@ -33,6 +34,7 @@ Application::Application(Renderer *renderer, Audio *audio)
   r->font(BOLD_FONT, 18);
   r->font(BOLD_FONT, 29);
   r->font(BOLD_FONT, 37);
+  r->font(REGULAR_FONT, 23);
   r->font(REGULAR_FONT, 29);
   r->color(0x0, 0x0, 0x0, 0xff);
   r->rect(0, 0, r->width(), r->height());

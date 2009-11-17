@@ -1,8 +1,8 @@
 ifeq ($(CXX), cc)
 CXX=g++
 endif
-CFLAGS=`pkg-config directfb freetype2 taglib --cflags`
-LDFLAGS=`pkg-config directfb freetype2 taglib --libs` -ldl -lmpg123
+CFLAGS=`pkg-config directfb freetype2 taglib sqlite3 --cflags`
+LDFLAGS=`pkg-config directfb freetype2 taglib sqlite3 --libs` -ldl -lmpg123
 
 SOURCES = Main.cpp \
 	Utils.cpp \
@@ -10,6 +10,7 @@ SOURCES = Main.cpp \
 	ImageLoader.cpp \
 	File.cpp \
 	Application.cpp \
+	Database.cpp \
 	Audio.cpp \
 	Renderer.cpp \
 	Font.cpp \
@@ -18,10 +19,11 @@ SOURCES = Main.cpp \
 	Widget.cpp \
 	Screen.cpp \
 	Menu.cpp \
-	MenuItem.cpp \
 	MainMenu.cpp \
 	FileMenu.cpp \
-	SettingsMenu.cpp
+	SettingsMenu.cpp \
+	MenuItem.cpp \
+	MusicItem.cpp
 
 OBJECTS = $(SOURCES:.cpp=.o)
 APP = nmti

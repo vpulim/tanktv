@@ -1,21 +1,29 @@
+#include <signal.h>
 #include "Application.h"
 #include "Menu.h"
 #include "File.h"
 
+Application *application = 0;
+
+void sigint_handler(int signal)
+{
+  if (application) 
+    application->exit();
+}
+
 int main(int argc, char **argv)
 {
-  File f("test.Mp3", "/share/Apps/nmti/test.Mp3");
-
-  printf("ext: %s\n", f.extension());
-  printf("name: %s\n", f.name());
-
   Renderer *renderer = new Renderer(argc, argv);
   Audio *audio = new Audio();
+  Database *database = new Database();
 
-  Application app(renderer, audio);
-  app.setScreen(new MainMenu(&app));
-  app.run();
+  application = new Application(renderer, audio, database);
+  application->setScreen(new MainMenu(application));
 
+  signal(SIGINT, sigint_handler);
+  application->run();
+
+  delete database;
   delete renderer;
   delete audio;
 }

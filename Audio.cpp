@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <dlfcn.h>
 #include "Audio.h"
+#include "Utils.h"
 
 Audio::Audio()
   : m_audio(NULL),
@@ -72,18 +73,17 @@ Audio::~Audio()
   }
 }
 
-bool Audio::open(const char *file)
+bool Audio::open(const char *path, const char *artist, const char *album, const char *title, const char *genre, int length)
 {
   long rate;
   int channels, encoding;
   int meta;
-  char title[31];
 
   stop();
 
-  debug("playing mp3: %s\n", file);
+  debug("playing mp3: %s\n", path);
 
-  if (mpg123_open(m_mpg123, (char *)file) != MPG123_OK) {
+  if (mpg123_open(m_mpg123, (char *)path) != MPG123_OK) {
     debug("couldn't open mp3 file: %s\n", mpg123_strerror(m_mpg123));
     return false;
   }
@@ -106,6 +106,13 @@ bool Audio::open(const char *file)
     }
   }
 
+  m_length = length;
+
+  safe_strcpy(m_title, title);
+  safe_strcpy(m_album, album);
+  safe_strcpy(m_artist, artist);
+  safe_strcpy(m_genre, genre);
+
   mpg123_format_none(m_mpg123);
   mpg123_format(m_mpg123, rate, channels, encoding);
 
@@ -126,7 +133,7 @@ bool Audio::open(const char *file)
   }
 #endif
 
-  strncpy(m_file, file, sizeof(m_file)-1);
+  safe_strcpy(m_file, path);
 
   m_state = PLAYING;
   m_elapsed = m_remaining = 0;
@@ -139,9 +146,9 @@ void Audio::stop()
 {
   if (m_state != STOPPED) {
     m_state = STOPPED;
+    m_elapsed = m_remaining = 0;
     if (m_thread) pthread_join(m_thread, 0);
     m_thread = 0;
-    m_elapsed = m_remaining = 0;
     m_seekto = -1;
     strcpy(m_file, "");
   }
@@ -170,7 +177,7 @@ void *Audio::play_thread(void *arg)
   unsigned char *buffer = NULL;
   size_t buffer_size, bytes;
   off_t frames, frames_left;
-  double secs, secs_left;
+  double secs, secs_left, ratio;
 
   buffer_size = mpg123_outblock(mh);
   buffer = (unsigned char *)malloc(buffer_size);
@@ -191,16 +198,25 @@ void *Audio::play_thread(void *arg)
 
     errno = mpg123_read(mh, buffer, buffer_size, &bytes);
     mpg123_position(mh, 0, bytes, &frames, &frames_left, &secs, &secs_left);
-    audio->m_elapsed = (int)(secs+0.5);
-    audio->m_remaining = (int)(secs_left+0.5);
+
+    if (audio->m_length) {
+      ratio = frames * 1.0 / (frames + frames_left);
+      audio->m_elapsed = (int)(ratio * audio->m_length);
+      audio->m_remaining = audio->m_length - audio->m_elapsed;
+    }
+    else {
+      audio->m_elapsed = (int)(secs+0.5);
+      audio->m_remaining = (int)(secs_left+0.5);
+    }
 
 #ifdef NMT
     audio->m_plugin->play(audio->m_audio, buffer, buffer_size, NULL);
 #endif
 
   } while (errno == MPG123_OK && audio->m_state != STOPPED);
-
   free(buffer);
+  audio->m_thread = 0;
+  audio->close();
 }
 
 void Audio::play()
@@ -229,6 +245,7 @@ void Audio::forward() {
 
 const char *Audio::title()
 {
+  if (m_title && m_title[0]) return m_title;
   if (m_v2) return m_v2->title->p;
   if (m_v1) {
     m_v1->title[sizeof(m_v1->title)-1] = 0;
@@ -239,6 +256,7 @@ const char *Audio::title()
 
 const char *Audio::album()
 {
+  if (m_album && m_album[0]) return m_album;
   if (m_v2) return m_v2->album->p;
   if (m_v1) {
     m_v1->album[sizeof(m_v1->album)-1] = 0;
@@ -249,6 +267,7 @@ const char *Audio::album()
 
 const char *Audio::artist()
 {
+  if (m_artist && m_artist[0]) return m_artist;
   if (m_v2) return m_v2->artist->p;
   if (m_v1) {
     m_v1->artist[sizeof(m_v1->artist)-1] = 0;
@@ -259,6 +278,7 @@ const char *Audio::artist()
 
 const char *Audio::genre()
 {
+  if (m_genre && m_genre[0]) return m_genre;
   if (m_v2) return m_v2->genre->p;
   if (m_v1) return NULL;
   return NULL;

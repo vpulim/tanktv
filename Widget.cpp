@@ -1,6 +1,7 @@
 #include <string.h>
 #include "Widget.h"
 #include "Application.h"
+#include "Utils.h"
 
 Widget::Widget(Widget *parent)
   : m_parent(parent),
@@ -60,8 +61,7 @@ void Widget::setBox(const Box &box)
 
 void Widget::setLabel(const char *label)
 {
-  strncpy(m_label, label, sizeof m_label);
-  m_label[sizeof m_label - 1] = 0;
+  safe_strcpy(m_label, label);
 }
 
 const char *Widget::label()

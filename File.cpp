@@ -11,8 +11,8 @@ using namespace std;
 File::File(const char *name, const char *path, bool isDirectory)
   : m_isdir(isDirectory)
 {
-  strncpy(m_name, name, sizeof(m_name)-1);
-  strncpy(m_path, path, sizeof(m_path)-1);
+  safe_strcpy(m_name, name);
+  safe_strcpy(m_path, path);
 }
 
 bool operator< (const File& f, const File& g)
@@ -29,6 +29,11 @@ void File::listDirectory(const char *dir, vector<File> &files, bool mediaOnly)
   char path[1024], ext[10];
   int len = strlen(dir);
   struct stat st;
+
+  if (len > sizeof(path) - 2) {
+    fprintf(stderr, "directory name too long: %s\n", dir);
+    return;
+  }
 
   strncpy(path, dir, sizeof(path)-2);
   if (dir[len-1] != '/') {
