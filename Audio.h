@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <pthread.h>
-#include <mpg123.h>
 #include "config.h"
+#include "Decoder.h"
 
 #define PLUGIN "/share/Apps/TankTV/lib/smp86xx_plugin.so"
 #define GError void
@@ -63,11 +63,9 @@ class Audio
   volatile enum state_t m_state;
   volatile int m_elapsed;
   volatile int m_remaining;
-  volatile int m_seekto;
+  volatile float m_seek_percent;
   pthread_t m_thread;
-  mpg123_handle *m_mpg123;
-  mpg123_id3v1 *m_v1;
-  mpg123_id3v2 *m_v2;
+  Decoder *m_decoder;
   char m_title[256];
   char m_album[256];
   char m_artist[256];

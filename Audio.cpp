@@ -13,13 +13,12 @@ Audio::Audio()
     m_opened(false),
     m_state(STOPPED),
     m_thread(0),
-    m_mpg123(0),
+    m_decoder(0),
     m_elapsed(0),
     m_remaining(0),
-    m_seekto(-1)
+    m_seek_percent(-1)
 {
   char *error;
-  int errno;
 
   struct block_param block_params[] = {
     { "engine", "0", 1, false },
@@ -36,10 +35,10 @@ Audio::Audio()
 
   strcpy(m_file, "");
 
-  if ((errno=mpg123_init()) != MPG123_OK || (m_mpg123=mpg123_new(NULL, &errno)) == NULL) {
-    debug("couldn't initialize mpg123: %s\n", mpg123_plain_strerror(errno));
-    mpg123_exit();
-    return;    
+  m_decoder = new MP3Decoder();
+  if (!m_decoder->valid()) {
+    delete m_decoder;
+    m_decoder = 0;
   }
 
 #ifdef NMT
@@ -67,68 +66,38 @@ Audio::~Audio()
   close();
   if (m_audio) m_plugin->finish(m_audio);
   if (m_dl) dlclose(m_dl);
-  if (m_mpg123) {
-    mpg123_delete(m_mpg123);
-    mpg123_exit();
-  }
+  if (m_decoder) delete m_decoder;
 }
 
 bool Audio::open(const char *path, const char *artist, const char *album, const char *title, const char *genre, int length)
 {
-  long rate;
-  int channels, encoding;
-  int meta;
+  if (!m_decoder) return false;
 
   stop();
 
   debug("playing mp3: %s\n", path);
 
-  if (mpg123_open(m_mpg123, (char *)path) != MPG123_OK) {
-    debug("couldn't open mp3 file: %s\n", mpg123_strerror(m_mpg123));
-    return false;
-  }
-
-  if (mpg123_getformat(m_mpg123, &rate, &channels, &encoding) != MPG123_OK) {
-    debug("couldn't get mp3 format: %s\n", mpg123_strerror(m_mpg123));
-    return false;
-  }
-
-  if (encoding != MPG123_ENC_SIGNED_16) {
-    debug("only signed 16-bit encoding supported!\n");
-    return false;
-  }
-
-  m_v1 = 0;
-  m_v2 = 0;
-  if ((meta=mpg123_meta_check(m_mpg123))) {
-    if (meta & MPG123_ID3) {
-      mpg123_id3(m_mpg123, &m_v1, &m_v2);
-    }
-  }
+  m_decoder->open(path);
 
   m_length = length;
-
   safe_strcpy(m_title, title);
   safe_strcpy(m_album, album);
   safe_strcpy(m_artist, artist);
   safe_strcpy(m_genre, genre);
 
-  mpg123_format_none(m_mpg123);
-  mpg123_format(m_mpg123, rate, channels, encoding);
-
 #ifdef NMT
   if (!m_opened) {
-    m_format.sample_rate = rate;
-    m_format.channels = channels;
-    m_format.bits = 16;
+    m_format.sample_rate = m_decoder->rate();
+    m_format.channels = m_decoder->channels();
+    m_format.bits = m_decoder->bits();
     m_plugin->open(m_audio, &m_format, NULL);
     m_opened = true;
   }
-  else if (m_format.sample_rate != rate || m_format.channels != channels) {
+  else if (m_format.sample_rate != m_decoder->rate() || m_format.channels != m_decoder->channels()) {
     m_plugin->close(m_audio);
-    m_format.sample_rate = rate;
-    m_format.channels = channels;
-    m_format.bits = 16;
+    m_format.sample_rate = m_decoder->rate();
+    m_format.channels = m_decoder->channels();
+    m_format.bits = m_decoder->bits();
     m_plugin->open(m_audio, &m_format, NULL);
   }
 #endif
@@ -137,7 +106,7 @@ bool Audio::open(const char *path, const char *artist, const char *album, const 
 
   m_state = PLAYING;
   m_elapsed = m_remaining = 0;
-  m_seekto = -1;
+  m_seek_percent = -1;
   pthread_create(&m_thread, NULL, play_thread, this);
   return true;
 }
@@ -149,7 +118,7 @@ void Audio::stop()
     m_elapsed = m_remaining = 0;
     if (m_thread) pthread_join(m_thread, 0);
     m_thread = 0;
-    m_seekto = -1;
+    m_seek_percent = -1;
     strcpy(m_file, "");
   }
 }
@@ -164,57 +133,37 @@ void Audio::close()
     }
   }
 
-  if (m_mpg123) {
-    mpg123_close(m_mpg123);
-  }
+  if (m_decoder) m_decoder->close();
 }
 
 void *Audio::play_thread(void *arg)
 {
   Audio *audio = (Audio *)arg;
-  mpg123_handle *mh = audio->m_mpg123;  
-  int errno;
-  unsigned char *buffer = NULL;
-  size_t buffer_size, bytes;
-  off_t frames, frames_left;
-  double secs, secs_left, ratio;
+  unsigned char *buffer;
+  size_t bytes;
 
-  buffer_size = mpg123_outblock(mh);
-  buffer = (unsigned char *)malloc(buffer_size);
-
-  do {
-    if (audio->m_state == PAUSED) {
-      usleep(100);
-      continue;
-    }
-
-    if (audio->m_seekto >= 0) {
-      frames = mpg123_timeframe(mh, audio->m_seekto);
-      if (frames >= 0) {
-	mpg123_seek_frame(mh, frames, SEEK_SET);
+  if (audio->m_decoder) {
+    do {
+      if (audio->m_state == PAUSED) {
+	usleep(100);
+	continue;
       }
-      audio->m_seekto = -1;
-    }
+      
+      if (audio->m_seek_percent >= 0) {
+	audio->m_decoder->seek(audio->m_seek_percent);
+	audio->m_seek_percent = -1;
+      }
+      
+      if (!audio->m_decoder->read(&buffer, &bytes)) break;
+      
+      if (audio->m_length) {
+	audio->m_elapsed = (int)(audio->m_decoder->position() * audio->m_length);
+	audio->m_remaining = audio->m_length - audio->m_elapsed;
+      }
+      audio->m_plugin->play(audio->m_audio, buffer, bytes, NULL);
+    } while (audio->m_state != STOPPED);
+  }
 
-    errno = mpg123_read(mh, buffer, buffer_size, &bytes);
-    mpg123_position(mh, 0, bytes, &frames, &frames_left, &secs, &secs_left);
-
-    if (audio->m_length) {
-      ratio = frames * 1.0 / (frames + frames_left);
-      audio->m_elapsed = (int)(ratio * audio->m_length);
-      audio->m_remaining = audio->m_length - audio->m_elapsed;
-    }
-    else {
-      audio->m_elapsed = (int)(secs+0.5);
-      audio->m_remaining = (int)(secs_left+0.5);
-    }
-
-#ifdef NMT
-    audio->m_plugin->play(audio->m_audio, buffer, buffer_size, NULL);
-#endif
-
-  } while (errno == MPG123_OK && audio->m_state != STOPPED);
-  free(buffer);
   audio->m_thread = 0;
   audio->close();
 }
@@ -230,57 +179,44 @@ void Audio::pause()
 }
 
 void Audio::rewind() {
-  if (isStopped() || m_elapsed == 0) return;
+  if (isStopped() || m_elapsed == 0 || !m_decoder) return;
 
-  m_seekto = m_elapsed - 5;
-  if (m_seekto < 0) m_seekto = 0;
+  m_seek_percent = m_decoder->position() - 0.02;
+  if (m_seek_percent < 0) m_seek_percent = 0;
 }
 
 void Audio::forward() {
-  if (isStopped() || m_remaining == 0) return;
+  if (isStopped() || m_remaining == 0 || !m_decoder) return;
 
-  m_seekto = m_elapsed + 5;
-  if (m_remaining < 5) m_seekto = m_elapsed + m_remaining - 1;
+  m_seek_percent = m_decoder->position() + 0.02;
+  if (m_seek_percent > 1) m_seek_percent = 1;
 }
 
 const char *Audio::title()
 {
   if (m_title && m_title[0]) return m_title;
-  if (m_v2) return m_v2->title->p;
-  if (m_v1) {
-    m_v1->title[sizeof(m_v1->title)-1] = 0;
-    return m_v1->title;
-  }
+  if (m_decoder) return m_decoder->title();
   return NULL;
 }
 
 const char *Audio::album()
 {
   if (m_album && m_album[0]) return m_album;
-  if (m_v2) return m_v2->album->p;
-  if (m_v1) {
-    m_v1->album[sizeof(m_v1->album)-1] = 0;
-    return m_v1->album;
-  }
+  if (m_decoder) return m_decoder->album();
   return NULL;
 }
 
 const char *Audio::artist()
 {
   if (m_artist && m_artist[0]) return m_artist;
-  if (m_v2) return m_v2->artist->p;
-  if (m_v1) {
-    m_v1->artist[sizeof(m_v1->artist)-1] = 0;
-    return m_v1->artist;
-  }
+  if (m_decoder) return m_decoder->artist();
   return NULL;
 }
 
 const char *Audio::genre()
 {
   if (m_genre && m_genre[0]) return m_genre;
-  if (m_v2) return m_v2->genre->p;
-  if (m_v1) return NULL;
+  if (m_decoder) return m_decoder->genre();
   return NULL;
 }
 

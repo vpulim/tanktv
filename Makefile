@@ -12,6 +12,7 @@ SOURCES = Main.cpp \
 	Application.cpp \
 	Database.cpp \
 	Audio.cpp \
+	MP3Decoder.cpp \
 	Renderer.cpp \
 	Font.cpp \
 	Player.cpp \
