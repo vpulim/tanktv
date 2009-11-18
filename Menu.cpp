@@ -60,8 +60,10 @@ bool Menu::handleEvent(Event &event)
 
 bool Menu::handleIdle()
 {
-  if (m_dirty_details) {
-    m_dirty_details = !paintDetails();
+  if (m_dirty_details && m_current > -1) {
+    paintDetails(m_menuitems[m_current]);
+    m_app->renderer()->flip();
+    m_dirty_details = !paintDetails(m_menuitems[m_current]);
   }
 
   if (m_dirty_back_buffer) {
@@ -95,9 +97,13 @@ bool Menu::handleIdle()
   return true;
 }
 
-bool Menu::paintDetails()
+bool Menu::paintDetails(MenuItem *menuItem)
 {
   return true;
+}
+
+void Menu::focusItem(MenuItem *menuItem)
+{
 }
 
 void Menu::selectItem(MenuItem *menuItem)

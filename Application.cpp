@@ -29,8 +29,8 @@ Application::Application(Renderer *renderer, Audio *audio, Database *database)
   r->loadImage("images/music.png");
   r->loadImage("images/settings.png");
   r->loadImage("images/unknown_movie.png");
-  r->loadImage("images/unknown_album.png");
   */
+  r->loadImage("images/unknown_album.png");
   r->font(BOLD_FONT, 18);
   r->font(BOLD_FONT, 29);
   r->font(BOLD_FONT, 37);

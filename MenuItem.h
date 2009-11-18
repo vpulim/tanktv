@@ -102,6 +102,7 @@ class AlbumMusicItem : public ArrowItem
  public:
   AlbumMusicItem(Menu *menu, int album_id, const char *artist, const char *album, const char *genre, int tracks, int length, int genre_id=0);
   virtual void select();
+  virtual bool handleIdle();
 };
 
 class SongMusicItem : public MenuItem

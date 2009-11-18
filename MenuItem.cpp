@@ -152,7 +152,7 @@ void InfoItem::paint()
     if (hasFocus())
       r->color(0xff, 0xff, 0xff, 0xff);
     else
-      r->color(0xad, 0xad, 0xad, 0xff);
+      r->color(0x99, 0x99, 0x99, 0xff);
     r->text(m_screen_x + MENUITEM_WIDTH, m_screen_y + 35, m_info, 200, JUSTIFY_RIGHT);
   }
 }

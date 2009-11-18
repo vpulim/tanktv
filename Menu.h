@@ -34,9 +34,10 @@ class Menu : public Screen
   int current() { return m_current; }
   void add(MenuItem *menuItem);
   virtual void selectItem(MenuItem *menuItem);
+  virtual void focusItem(MenuItem *menuItem);
   virtual bool handleEvent(Event &event);  
   virtual bool handleIdle();  
-  virtual bool paintDetails();
+  virtual bool paintDetails(MenuItem *menuItem);
   virtual void paint();
 };
 
