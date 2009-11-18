@@ -78,8 +78,8 @@ void MenuItem::paint()
 	r->text(m_screen_x-offset+m_label_width+60, m_screen_y + 35, m_label, MENUITEM_WIDTH+offset, JUSTIFY_LEFT, true);
 	r->setClip(&clip);
 	if (offset > 0 && offset < m_label_width+30)
-	  r->image(m_screen_x-14, m_screen_y+1, "images/fade_left.png", true);
-	r->image(m_screen_x+MENUITEM_WIDTH-36, m_screen_y+1, "images/fade_right.png", true);
+	  r->image(m_screen_x-14, m_screen_y, "images/fade_left.png", true);
+	r->image(m_screen_x+MENUITEM_WIDTH-36, m_screen_y, "images/fade_right.png", true);
       }
     }
 

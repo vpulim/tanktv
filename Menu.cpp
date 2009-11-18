@@ -76,18 +76,15 @@ bool Menu::handleIdle()
     for (int i=start; i<=end; i++) {
       MenuItem *mi = m_menuitems[i];
       if (mi->handleIdle()) {
-	if (i == m_current-1 || i == m_current+1)
+	paintBackground(start, end, i, true);
+	if (i >= m_current-1 && i <= m_current+1)
 	  paintCurrent = true;
-	else {
-	  paintBackground(start, end, i, true);
+	else
 	  mi->paint();
-	}
 	flip = true;
       }
     }
     if (paintCurrent) {
-      paintBackground(start, end, m_current-1, true);      
-      paintBackground(start, end, m_current+1, true);      
       paintBackground(start, end, m_current, true);      
       for (int i=m_current-1; i <= m_current+1; i++)
 	if (i >= 0 && i < m_size) m_menuitems[i]->paint();
@@ -126,11 +123,11 @@ void Menu::paintBackground(int start, int end, int index, bool eraseOld)
     Renderer *r = m_app->renderer();
 
     if (index == m_current) {
-      r->image(x - 32, m_top + (index - start) * height - 8, "images/menuitem_bg.png");  
+      r->image(x - 32, m_top + (index - start) * height - 18, "images/menuitem_bg.png");  
     }
     else if (eraseOld) {
       r->color(0, 0, 0, 0xff);
-      r->rect(x - 32, m_top + (index - start) * height - 8, 528, 65);
+      r->rect(x - 32, m_top + (index - start) * height - 18, 528, 85);
     }
   }
 }
@@ -153,10 +150,11 @@ void Menu::paint()
 
     getVisibleRange(&start, &end);        
 
+    paintBackground(start, end, m_current);
+
     for (int i=start; i<=end; i++) {
       MenuItem *mi = m_menuitems[i];
 
-      paintBackground(start, end, i);
       y = (i - start) * height;
       mi->move(x, m_top + y);
       mi->paint();

@@ -50,7 +50,7 @@ class Renderer
  private:
   void init();
   void destroy();
-  void scale(int *x) { *x = (int)(*x * m_scale - 0.5); }
+  void scale(int *x) { *x = (int)(*x * m_scale); }
   void unscale(int *x) { *x = (int)(*x / m_scale + 0.5); }
 
  public:
