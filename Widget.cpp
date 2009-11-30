@@ -5,8 +5,7 @@
 
 Widget::Widget(Widget *parent)
   : m_parent(parent),
-    m_app(0),
-    m_dirty(true)
+    m_app(0)
 {
   if (parent) {
     m_app = parent->m_app;
@@ -14,6 +13,7 @@ Widget::Widget(Widget *parent)
   move(0,0);
   resize(200,200);
   setLabel("");
+  setDirty();
 }
 
 bool Widget::handleEvent(Event &event)
@@ -42,15 +42,59 @@ void Widget::update_screen_xy()
   }
 }
 
+Box Widget::getDirtyRegion(int buffer)
+{
+  if (buffer < 0) buffer = m_app ? m_app->renderer()->activeBuffer() : 0;
+  return m_dirty[buffer];
+}
+
+bool Widget::dirty(int buffer)
+{
+  if (buffer < 0) buffer = m_app ? m_app->renderer()->activeBuffer() : 0;
+  return m_dirty[buffer].w > 0;
+}
+
+void Widget::clearDirty(int buffer)
+{
+  if (buffer < 0) buffer = m_app ? m_app->renderer()->activeBuffer() : 0;
+  m_dirty[buffer] = Box(0,0,0,0);  
+}
+
+void Widget::setDirtyRegion(Box region, int buffer)
+{
+  if (buffer < 0) {
+    setDirtyRegion(region, 0);
+    setDirtyRegion(region, 1);
+  }
+  else 
+    m_dirty[buffer] = m_dirty[buffer] + region;
+}
+
+void Widget::setDirty(int buffer)
+{
+  if (buffer < 0) {
+    setDirty(0);
+    setDirty(1);
+  }
+  else
+    m_dirty[buffer] = Box(m_box.x, m_box.y, m_box.w, m_box.h);
+}
+
 void Widget::move(int x, int y)
 {
-  m_box.move(x,y);
-  update_screen_xy();
+  if (m_box.x != x || m_box.y != y) {
+    m_box.move(x,y);
+    update_screen_xy();
+    setDirty();
+  }
 }
 
 void Widget::resize(int w, int h)
 {
-  m_box.resize(w,h);
+  if (m_box.w != w || m_box.h != h) {
+    m_box.resize(w,h);
+    setDirty();
+  }
 }
 
 void Widget::setBox(const Box &box) 
@@ -72,8 +116,10 @@ const char *Widget::label()
 void Widget::paint()
 {
   debug("in Widget::paint()\n");
-  Renderer *r = m_app->renderer();
-  r->color(0x90, 0x90, 0x90, 0xff);
-  r->rect(m_screen_x, m_screen_y, m_box.w, m_box.h);
-  r->flip();
+  if (m_app) {
+    Renderer *r = m_app->renderer();
+    Box dirty = getDirtyRegion();
+    r->color(0,0,0,0xff);
+    r->rect(m_screen_x, m_screen_y, dirty.w, dirty.h);
+  }
 }

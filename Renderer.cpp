@@ -14,6 +14,7 @@ Renderer::Renderer(int argc, char **argv)
   : m_initialized(false),
     m_exit(false),
     m_image_loader(NULL),
+    m_curr_buffer(0),
     m_scale(1.0)
 {
   Font::init();
@@ -71,6 +72,8 @@ void Renderer::init()
   m_scale = ((float)m_width) / VIRTUAL_WIDTH;
   m_width = VIRTUAL_WIDTH;
   m_height = VIRTUAL_HEIGHT;
+  
+  m_curr_buffer = 0;
 
   color(0,0,0,0xff);
   rect(0,0,m_width, m_height); flip();
@@ -287,6 +290,7 @@ void Renderer::image(int x, int y, const char *path, bool blend)
 void Renderer::flip()
 {
   m_surface->Flip(m_surface, NULL, DSFLIP_WAITFORSYNC);
+  m_curr_buffer = !m_curr_buffer;
 }
 
 void Renderer::play(const char *file)

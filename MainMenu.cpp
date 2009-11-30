@@ -5,7 +5,7 @@ MainMenu::MainMenu(Application *application)
 {
   new ArrowItem(this, "Movies");
   new ArrowItem(this, "TV Shows");
-  new MusicItem(this, "Music");
+  new ArrowItem(this, "Music");
   new ArrowItem(this, "Downloads");
   new ArrowItem(this, "Files");
   new ArrowItem(this, "Settings");
@@ -15,26 +15,18 @@ MainMenu::MainMenu(Application *application)
 void MainMenu::selectItem(MenuItem *menuItem)
 {
   debug("in MainMenu::m_cb\n");
-  switch (menuItem->index()) {
-  case 0:
+  if (!strcmp(menuItem->label(), "Movies"))
     m_app->go(new FileMenu(m_app, "Movies", "/share/Video/Movies"));
-    break;
-  case 1:
+  else if (!strcmp(menuItem->label(), "TV Shows"))
     m_app->go(new FileMenu(m_app, "TV Shows", "/share/Video/TV Shows"));
-    break;
-  case 2:
-    break;
-  case 3:
+  else if (!strcmp(menuItem->label(), "Music"))
+    m_app->go(new MusicMenu(m_app));
+  else if (!strcmp(menuItem->label(), "Downloads"))
     m_app->go(new FileMenu(m_app, "Downloads", "/share/Download"));
-    break;
-  case 4:
+  else if (!strcmp(menuItem->label(), "Files"))
     m_app->go(new FileMenu(m_app, "Files", "/share"));
-    break;
-  case 5:
+  else if (!strcmp(menuItem->label(), "Settings"))
     m_app->go(new SettingsMenu(m_app));
-    break;
-  case 6: 
+  else if (!strcmp(menuItem->label(), "Exit"))
     m_app->exit();
-    break;
-  }
 }

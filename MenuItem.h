@@ -26,12 +26,13 @@ class MenuItem : public Widget
   bool hasFocus();
 
  public:
-  MenuItem(Menu *menu, const char *label);
+  MenuItem(Menu *menu, const char *label, const void *data=NULL);
+  const void *data() { return m_data; }
   virtual void select();
   void setIndex(int i) { m_index = i; }
   int index() { return m_index; }
   void setImage(const char *image_on, const char *image_off="");
-  virtual bool handleIdle();
+  virtual void update();
   virtual void paint();
 };
 
@@ -48,7 +49,7 @@ class FileItem : public MenuItem
 class ArrowItem : public MenuItem
 {
  public:
-  ArrowItem(Menu *menu, const char *label);
+  ArrowItem(Menu *menu, const char *label, const void *data=NULL);
 };
 
 class InfoItem : public MenuItem
@@ -57,10 +58,11 @@ class InfoItem : public MenuItem
   char m_info[256];
  public:
   InfoItem(Menu *menu, const char *label, const char *info="");  
-  void setInfo(const char *info);
+  void setInfo(const char *info, const char *label=NULL);
   virtual void paint();
 };
 
+/*
 class MusicItem : public ArrowItem
 {
  public:
@@ -102,7 +104,7 @@ class AlbumMusicItem : public ArrowItem
  public:
   AlbumMusicItem(Menu *menu, int album_id, const char *artist, const char *album, const char *genre, int tracks, int length, int genre_id=0);
   virtual void select();
-  virtual bool handleIdle();
+  virtual void update();
 };
 
 class SongMusicItem : public MenuItem
@@ -118,5 +120,6 @@ class SongMusicItem : public MenuItem
   SongMusicItem(Menu *menu, const char *path, const char *artist, const char *album, const char *title, const char *genre, int length);
   virtual void select();
 };
+*/
 
 #endif

@@ -3,11 +3,12 @@
 #include "Player.h"
 #include "Utils.h"
 
-MenuItem::MenuItem(Menu *menu, const char *label)
+MenuItem::MenuItem(Menu *menu, const char *label, const void *data)
   : Widget(menu),
     m_index(-1),
     m_offset(0),
-    m_menu(menu)
+    m_menu(menu),
+    m_data(data)
 {
   setLabel(label);
   m_image_on[0] = m_image_off[0] = 0;
@@ -40,54 +41,57 @@ void MenuItem::setImage(const char *image_on, const char *image_off)
   }
 }
 
-bool MenuItem::handleIdle()
+void MenuItem::update()
 {
   if (m_scroll) {
     if (hasFocus()) {
       m_offset += SCROLL_SPEED;
-      if (m_offset >= m_label_width+60+SCROLL_SPEED * SCROLL_DELAY) 
-	m_offset = 0;
+      if (m_offset >= m_label_width+60+SCROLL_SPEED * SCROLL_DELAY) m_offset = 0;
     }    
-    else {
-      m_offset=0;
-    }
+    else m_offset=0;
   }
-  return m_scroll && hasFocus();
+  else m_offset=0;
+  if (m_scroll && hasFocus()) {
+    setDirty();
+  }
 }
 
 void MenuItem::paint()
 {
-  if (m_app) {
-    Renderer *r = m_app->renderer();
+  if (!m_app) return;
 
-    r->font(BOLD_FONT, 29);
-    r->color(0xff, 0xff, 0xff, 0xff);
-    if (!hasFocus() || !m_scroll)
-      r->text(m_screen_x, m_screen_y + 35, m_label, MENUITEM_WIDTH);
+  Renderer *r = m_app->renderer();
+  int buffer = r->activeBuffer();
 
-    if (hasFocus()) {
-      if (m_scroll) {
-	IDirectFBSurface *primary = r->surface();
-	Box clip, textclip(m_screen_x, m_screen_y-5, MENUITEM_WIDTH, 50);
-	int offset = 0;
-	r->getClip(&clip);
-	r->setClip(&textclip);
-	if (m_offset > SCROLL_SPEED * SCROLL_DELAY) 
-	  offset = m_offset - SCROLL_SPEED * SCROLL_DELAY;
-	r->text(m_screen_x-offset, m_screen_y + 35, m_label, MENUITEM_WIDTH+offset, JUSTIFY_LEFT, true);
-	r->text(m_screen_x-offset+m_label_width+60, m_screen_y + 35, m_label, MENUITEM_WIDTH+offset, JUSTIFY_LEFT, true);
-	r->setClip(&clip);
-	if (offset > 0 && offset < m_label_width+30)
-	  r->image(m_screen_x-14, m_screen_y, "images/fade_left.png", true);
-	r->image(m_screen_x+MENUITEM_WIDTH-36, m_screen_y, "images/fade_right.png", true);
-      }
+  r->font(BOLD_FONT, 29);
+  r->color(0xff, 0xff, 0xff, 0xff);
+  if (!hasFocus() || !m_scroll)
+    r->text(m_screen_x, m_screen_y + 35, m_label, MENUITEM_WIDTH);
+
+  if (hasFocus()) {
+    if (m_scroll) {
+      IDirectFBSurface *primary = r->surface();
+      Box clip, textclip(m_screen_x, m_screen_y-5, MENUITEM_WIDTH, 50);
+      int offset = 0;
+      r->getClip(&clip);
+      r->setClip(&textclip);
+      if (m_offset > SCROLL_SPEED * SCROLL_DELAY) 
+        offset = m_offset - SCROLL_SPEED * SCROLL_DELAY;
+      r->text(m_screen_x-offset, m_screen_y + 35, m_label, MENUITEM_WIDTH+offset, JUSTIFY_LEFT, true);
+      r->text(m_screen_x-offset+m_label_width+60, m_screen_y + 35, m_label, MENUITEM_WIDTH+offset, JUSTIFY_LEFT, true);
+      r->setClip(&clip);
+      if (offset > 0 && offset < m_label_width+30)
+        r->image(m_screen_x-14, m_screen_y, "images/fade_left.png", true);
+      r->image(m_screen_x+MENUITEM_WIDTH-36, m_screen_y, "images/fade_right.png", true);
     }
-
-    if (m_image_on[0] && m_image_off[0])
-      m_app->renderer()->image(m_screen_x + m_box.w - 50, m_screen_y, 
-			       hasFocus() ? m_image_on : m_image_off,
-			       true);
   }
+
+  if (m_image_on[0] && m_image_off[0])
+    m_app->renderer()->image(m_screen_x + m_box.w - 50, m_screen_y, 
+                             hasFocus() ? m_image_on : m_image_off,
+                             true);
+
+  clearDirty(buffer);
 }
 
 FileItem::FileItem(Menu *menu, File *file)
@@ -124,8 +128,8 @@ void FileItem::select()
   MenuItem::select();
 }
 
-ArrowItem::ArrowItem(Menu *menu, const char *label)
-  : MenuItem(menu, label)
+ArrowItem::ArrowItem(Menu *menu, const char *label, const void *data)
+  : MenuItem(menu, label, data)
 {
   setImage("images/arrow_on.png", "images/arrow.png");
 }
@@ -136,23 +140,28 @@ InfoItem::InfoItem(Menu *menu, const char *label, const char *info)
   setInfo(info);
 }
 
-void InfoItem::setInfo(const char *info)
+void InfoItem::setInfo(const char *info, const char *label)
 {
+  if (label) setLabel(label);
   safe_strcpy(m_info, info);
+  setDirty();
 }
 
 void InfoItem::paint()
 {
+  if (!m_app) return;
+
+  Renderer *r = m_app->renderer();
+  int buffer = r->activeBuffer();
+
   MenuItem::paint();
 
-  if (m_app) {
-    Renderer *r = m_app->renderer();
-
-    r->font(REGULAR_FONT, 23);
-    if (hasFocus())
-      r->color(0xff, 0xff, 0xff, 0xff);
-    else
-      r->color(0x99, 0x99, 0x99, 0xff);
-    r->text(m_screen_x + MENUITEM_WIDTH, m_screen_y + 35, m_info, 200, JUSTIFY_RIGHT);
-  }
+  r->font(REGULAR_FONT, 23);
+  if (hasFocus())
+    r->color(0xff, 0xff, 0xff, 0xff);
+  else
+    r->color(0x99, 0x99, 0x99, 0xff);
+  r->text(m_screen_x + MENUITEM_WIDTH, m_screen_y + 35, m_info, 200, JUSTIFY_RIGHT);
+  
+  clearDirty(buffer);
 }

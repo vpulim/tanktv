@@ -22,9 +22,9 @@ SOURCES = Main.cpp \
 	Menu.cpp \
 	MainMenu.cpp \
 	FileMenu.cpp \
+	MusicMenu.cpp \
 	SettingsMenu.cpp \
-	MenuItem.cpp \
-	MusicItem.cpp
+	MenuItem.cpp 
 
 OBJECTS = $(SOURCES:.cpp=.o)
 APP = nmti
@@ -33,7 +33,7 @@ all: $(SOURCES) $(APP)
 
 $(APP): $(OBJECTS)
 	$(CXX) $(LDFLAGS) -Wl,-E $(OBJECTS) -o $@
-	scp -i /Users/vp/nmt/id_rsa_root.openssh nmti root@192.168.1.4:/share/Apps/TankTV
+	scp -i /Users/vp/nmt/id_rsa_root.openssh nmti root@192.168.1.6:/share/Apps/TankTV
 
 .cpp.o:
 	$(CXX) $(CFLAGS) -c $< -o $@

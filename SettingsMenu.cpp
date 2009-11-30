@@ -3,30 +3,24 @@
 
 class ScanningItem : public InfoItem
 {
- private:
-  void updateLabel() {
-    if (m_app->database()->isScanning()) {
-      char count[100];
-      setLabel("Stop Scan");
-      sprintf(count, "Files: %d", m_app->database()->scanCount());
-      setInfo(count);
-    }
-    else {
-      setLabel("Scan Media");
-      setInfo("");
-    }
-  }
-
  public:
   ScanningItem(Menu *menu)
     : InfoItem(menu, "") 
   {
-    handleIdle();
+    update();
   }  
 
-  virtual bool ScanningItem::handleIdle()
+  virtual void update()
   {
-    updateLabel();
+    if (m_app->database()->isScanning()) {
+      char count[100];
+      sprintf(count, "Files: %d", m_app->database()->scanCount());
+      setInfo(count, "Stop Scan");
+    }
+    else {
+      if (strcmp(m_label, "Scan Media"))
+        setInfo("", "Scan Media");
+    }
   }
 
   virtual void select() 
@@ -35,7 +29,7 @@ class ScanningItem : public InfoItem
       m_app->database()->stopScan();
     else
       m_app->database()->startScan();
-    updateLabel();
+    update();
   }
 };
 

@@ -1,7 +1,6 @@
 #ifndef MENU_H
 #define MENU_H
 
-#include <pthread.h>
 #include <vector>
 #include "Screen.h"
 #include "Application.h"
@@ -17,12 +16,11 @@ typedef void (*MenuItemCallback)(Menu *menu, MenuItem *menuItem);
 class Menu : public Screen
 {
  protected:
-  MenuItem *m_menuitems[MAX_MENU_ITEMS];
+  MenuItem *m_menuItems[MAX_MENU_ITEMS];
   int m_size;
   int m_current;
   int m_top;
-  bool m_dirty_back_buffer;
-  bool m_dirty_details;
+  int m_idle_count;
 
  private:
   void getVisibleRange(int *start, int *end);
@@ -57,7 +55,14 @@ class FileMenu : public Menu
 
  public:
   FileMenu(Application *application, const char *title="Media", const char *path=NULL);
-  virtual ~FileMenu();
+  virtual void selectItem(MenuItem *menuItem);
+};
+
+class MusicMenu : public Menu
+{
+ public:
+  MusicMenu(Application *application);
+  virtual void selectItem(MenuItem *menuItem);
 };
 
 class SettingsMenu : public Menu

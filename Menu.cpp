@@ -7,8 +7,7 @@ Menu::Menu(Application *application, const char *title)
     m_size(0),
     m_current(-1),
     m_top(180),
-    m_dirty_back_buffer(true),
-    m_dirty_details(true)
+    m_idle_count(0)
 {  
   setLabel(title);
 }
@@ -16,7 +15,7 @@ Menu::Menu(Application *application, const char *title)
 Menu::~Menu()
 {
   for (int i; i<m_size; i++) {
-    delete m_menuitems[i];
+    delete m_menuItems[i];
   }
 }
 
@@ -24,7 +23,7 @@ void Menu::add(MenuItem *menuItem)
 {
   if (m_size < MAX_MENU_ITEMS) {
     menuItem->setIndex(m_size);
-    m_menuitems[m_size++] = menuItem;
+    m_menuItems[m_size++] = menuItem;
   }
   if (m_size == 1) m_current = 0;
 }
@@ -36,63 +35,42 @@ bool Menu::handleEvent(Event &event)
   case KEY_UP:
     if (m_current > 0) {
       m_current--; 
-      setDirty(true);
     }
     break;
   case KEY_DOWN:
     if (m_current < m_size - 1) {
       m_current++;
-      setDirty(true);
     }
     break;
   case KEY_ENTER:
     if (m_current > -1) {
-      m_menuitems[m_current]->select();
-      setDirty(true);
+      m_menuItems[m_current]->select();
     }
     break;
   }
-  if (m_current > -1) debug("current item: %s\n", m_menuitems[m_current]->label());
-  m_dirty_back_buffer = true;
-  m_dirty_details = true;
+  if (m_current > -1) debug("current item: %s\n", m_menuItems[m_current]->label());
+  setDirtyRegion(Box(MENU_X, m_top, 445, m_box.h - m_top));
+  m_idle_count=0;
   return true;
 }
 
 bool Menu::handleIdle()
 {
-  if (m_dirty_details && m_current > -1) {
-    paintDetails(m_menuitems[m_current]);
-    m_app->renderer()->flip();
-    m_dirty_details = !paintDetails(m_menuitems[m_current]);
+  m_idle_count++;
+  if (m_idle_count < 5) return true;
+  if (m_idle_count == 5) setDirtyRegion(Box(0, 0, MENU_X - 60, m_box.h));    
+
+  int start, end;
+
+  getVisibleRange(&start, &end);        
+    
+  for (int i=start; i<=end; i++) {
+    m_menuItems[i]->update();
   }
 
-  if (m_dirty_back_buffer) {
-    paint();
-    m_dirty_back_buffer = false;
-  }
-
-  if (m_current > -1) {
-    int start, end;
-    bool flip = false, paintCurrent = false;
-    getVisibleRange(&start, &end);        
-    for (int i=start; i<=end; i++) {
-      MenuItem *mi = m_menuitems[i];
-      if (mi->handleIdle()) {
-	paintBackground(start, end, i, true);
-	if (i >= m_current-1 && i <= m_current+1)
-	  paintCurrent = true;
-	else
-	  mi->paint();
-	flip = true;
-      }
-    }
-    if (paintCurrent) {
-      paintBackground(start, end, m_current, true);      
-      for (int i=m_current-1; i <= m_current+1; i++)
-	if (i >= 0 && i < m_size) m_menuitems[i]->paint();
-    }
-    if (flip) m_app->renderer()->flip();
-  }
+  
+  paint();
+  m_app->renderer()->flip();
 
   return true;
 }
@@ -125,52 +103,96 @@ void Menu::getVisibleRange(int *start, int *end)
 void Menu::paintBackground(int start, int end, int index, bool eraseOld)
 {
   if (index >= start && index <= end) {
-    int x = MENU_X, height = m_menuitems[0]->box().h;
+    int x = MENU_X - 32, height = m_menuItems[0]->box().h;
+    int y = m_top + (index - start) * height - 18;
     Renderer *r = m_app->renderer();
 
     if (index == m_current) {
-      r->image(x - 32, m_top + (index - start) * height - 18, "images/menuitem_bg.png");  
+      r->image(x, y, "images/menuitem_bg.png");  
     }
     else if (eraseOld) {
       r->color(0, 0, 0, 0xff);
-      r->rect(x - 32, m_top + (index - start) * height - 18, 528, 85);
+      r->rect(MENU_X, y+18, 445, height);
     }
   }
 }
 
 void Menu::paint()
 {
-  int x = MENU_X;
+  if (!m_app) return;
+
   Renderer *r = m_app->renderer();
-    
-  r->color(0, 0, 0, 0xff);
-  r->rect(0, 0, r->width(), r->height());  
+  int buffer = r->activeBuffer();
+  Box dirtyBox = getDirtyRegion(buffer);
+
+  if (dirty())
+    debug("Menu::dirtyBox(%d) = %d %d %d %d\n", buffer, dirtyBox.x, dirtyBox.y, dirtyBox.w, dirtyBox.h);
+
+  int x = MENU_X;
   
-  r->font(BOLD_FONT, 37);
-  r->color(0xff, 0xff, 0xff, 0xff);
-  r->text(x + 222, m_top - 40, m_label, 445, JUSTIFY_CENTER);
+  if (dirtyBox & Box(0, 0, x-60, m_box.h)) {
+    r->color(0, 0, 0, 0xff);
+    r->rect(0, 0, x - 60, m_box.h);      
+    paintDetails(m_menuItems[m_current]);
+  }
+
+  if (dirtyBox & Box(x, 0, 445, m_top)) {
+    r->color(0, 0, 0, 0xff);
+    r->rect(x-60, 0, 445+120, m_top);  
+    r->font(BOLD_FONT, 37);
+    r->color(0xff, 0xff, 0xff, 0xff);
+    r->text(x + 222, m_top - 40, m_label, 445, JUSTIFY_CENTER);
+  }
 
   if (m_current > -1) {
-
-    int start, end, y, height = m_menuitems[0]->box().h;
+    int start, end, y, height = m_menuItems[0]->box().h;
 
     getVisibleRange(&start, &end);        
 
-    paintBackground(start, end, m_current);
+    if (dirtyBox & Box(x-60, m_top, 445+120, m_box.h - m_top)) {
+      r->color(0, 0, 0, 0xff);
+      r->rect(x-60, m_top, 445+120, m_box.h - m_top);
+      paintBackground(start, end, m_current, false);
 
-    for (int i=start; i<=end; i++) {
-      MenuItem *mi = m_menuitems[i];
+      for (int i=start; i<=end; i++) {
+        MenuItem *mi = m_menuItems[i];
 
-      y = (i - start) * height;
-      mi->move(x, m_top + y);
-      mi->paint();
-      if (i-start == 0 && start > 0) {
-	r->image(x - 32, m_top - 18, "images/fade_top.png", true);  
+        y = (i - start) * height;
+        mi->move(x, m_top + y);
+        mi->paint();      
+        if (i-start == 0 && start > 0)
+          r->image(x - 32, m_top - 18, "images/fade_top.png", true);  
+        if (i-start == 9)
+          r->image(x - 32, m_top + y - 18, "images/fade_bot.png", true);  
       }
-      if (i-start == 9) {
-	r->image(x - 32, m_top + y - 18, "images/fade_bot.png", true);  
+    }
+    else {
+      bool paintCurrent = false;
+      for (int i=start; i<=end; i++) {
+        MenuItem *mi = m_menuItems[i];
+
+        if (mi->dirty(buffer)) {
+          paintBackground(start, end, i, true);
+          if (i >= m_current-1 && i <= m_current+1)
+            paintCurrent = true;
+          else {
+            mi->paint();      
+          }
+        }
+      }
+      if (paintCurrent) {
+        paintBackground(start, end, m_current, true);      
+        for (int i=m_current-1; i <= m_current+1; i++)
+          if (i >= 0 && i < m_size) m_menuItems[i]->paint();
       }
     }
   }
-  r->flip();
+  else {
+    if (dirtyBox & Box(x-60, m_top, 445+120, m_box.h - m_top)) {
+      r->color(0, 0, 0, 0xff);
+      r->rect(x-60, m_top, 445+120, m_box.h - m_top);  
+    }
+  }
+
+  clearDirty(buffer);
 }

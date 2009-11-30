@@ -67,8 +67,6 @@ bool Player::handleIdle()
     r->color(0x80, 0x80, 0x80, 0xff);
     r->rect(633, 576, 6+progress, 10);
     r->image(633 + progress, 575, "images/position_knob.png", true);
-
-    r->flip();  
   }
 
   return true;
@@ -82,9 +80,4 @@ void Player::paint()
   r->color(0x0, 0x0, 0x0, 0xff);
   r->rect(m_screen_x, m_screen_y, m_box.w, m_box.h);
   r->image(100, 92, "images/unknown_album.png");
-  r->flip();  
-  r->color(0x0, 0x0, 0x0, 0xff);
-  r->rect(m_screen_x, m_screen_y, m_box.w, m_box.h);
-  r->image(100, 92, "images/unknown_album.png");
-  r->flip();  
 }

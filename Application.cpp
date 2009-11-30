@@ -50,8 +50,9 @@ void Application::setScreen(Screen *screen)
   }
   m_stack.push(screen);
   if (m_renderer->initialized()) {
+    screen->setDirty();
     screen->paint();
-    screen->setDirty(false);
+    m_renderer->flip();
   }
 }
 
@@ -92,10 +93,8 @@ bool Application::handleEvent(Event &event)
   if (screen) {
     if (!screen->handleEvent(event)) back();
     screen = m_stack.top();
-    if (screen && screen->dirty()) {
-      screen->paint();
-      screen->setDirty(false);
-    }
+    screen->paint();
+    m_renderer->flip();
   }
 
   return true;
@@ -108,10 +107,8 @@ bool Application::handleIdle()
   if (screen) {
     if (!screen->handleIdle()) back();
     screen = m_stack.top();
-    if (screen && screen->dirty()) {
-      screen->paint();
-      screen->setDirty(false);
-    }
+    screen->paint();
+    m_renderer->flip();
   }
 
   return true;
@@ -124,8 +121,9 @@ Stack::Stack()
 
 bool Stack::push(Screen *screen)
 {
+  screen->setDirty();
   if (m_top < MAX_STACK_SIZE-1) {
-    if (m_top > -1) m_screens[m_top]->setDirty(true);
+    if (m_top > -1) m_screens[m_top]->setDirty();
     m_screens[++m_top] = screen;
     return true;
   }

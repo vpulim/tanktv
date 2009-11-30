@@ -39,6 +39,7 @@ class Renderer
   IDirectFBSurface *m_surface;
   IDirectFBEventBuffer *m_eventBuffer;
   IDirectFBInputDevice *m_input;
+  int m_curr_buffer;
   int m_width;
   int m_height;
   float m_scale;
@@ -65,6 +66,7 @@ class Renderer
   int height() { return m_height; }
   void loop(EventListener *listener);
   void color(unsigned char r, unsigned char g, unsigned char b, unsigned char alpha);
+  int activeBuffer() { return m_curr_buffer; }
   void setClip(Box *box);
   void getClip(Box *box);
   void rect(int x, int y, int w, int h);
