@@ -30,7 +30,6 @@ void Menu::add(MenuItem *menuItem)
 
 bool Menu::handleEvent(Event &event)
 {
-  debug("in Menu::handleEvent: %d\n", event.key);
   switch (event.key) {
   case KEY_UP:
     if (m_current > 0) {
@@ -61,18 +60,16 @@ bool Menu::handleIdle()
   if (m_idle_count == 5) setDirtyRegion(Box(0, 0, MENU_X - 60, m_box.h));    
 
   int start, end;
+  bool dirty = false;
 
   getVisibleRange(&start, &end);        
     
   for (int i=start; i<=end; i++) {
     m_menuItems[i]->update();
+    if (m_menuItems[i]->dirty()) dirty = true;
   }
 
-  
-  paint();
-  m_app->renderer()->flip();
-
-  return true;
+  return dirty;
 }
 
 bool Menu::paintDetails(MenuItem *menuItem)
@@ -124,9 +121,6 @@ void Menu::paint()
   Renderer *r = m_app->renderer();
   int buffer = r->activeBuffer();
   Box dirtyBox = getDirtyRegion(buffer);
-
-  if (dirty())
-    debug("Menu::dirtyBox(%d) = %d %d %d %d\n", buffer, dirtyBox.x, dirtyBox.y, dirtyBox.w, dirtyBox.h);
 
   int x = MENU_X;
   

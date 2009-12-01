@@ -17,10 +17,12 @@ class Stack
 
  public:
   Stack();
+  ~Stack();
   bool push(Screen *screen);
   Screen *pop();
   Screen *top();
   int size() { return m_top + 1; }
+  void cleanUp();
 };
 
 class Application : public EventListener

@@ -46,7 +46,8 @@ Application::Application(Renderer *renderer, Audio *audio, Database *database)
 void Application::setScreen(Screen *screen) 
 {
   while (m_stack.top()) {
-    delete m_stack.pop();
+    m_stack.pop();
+    m_stack.cleanUp();
   }
   m_stack.push(screen);
   if (m_renderer->initialized()) {
@@ -77,11 +78,13 @@ void Application::go(Screen *screen)
 
 void Application::back() 
 { 
-  if (m_stack.size() > 1) delete m_stack.pop(); 
+  if (m_stack.size() > 1) m_stack.pop(); 
 }
 
 bool Application::handleEvent(Event &event)
 {
+  m_stack.cleanUp();
+
   switch (event.key) {
   case KEY_BACK:
     back();
@@ -102,13 +105,16 @@ bool Application::handleEvent(Event &event)
 
 bool Application::handleIdle()
 {
+  m_stack.cleanUp();
+
   Screen *screen = m_stack.top();
 
   if (screen) {
-    if (!screen->handleIdle()) back();
-    screen = m_stack.top();
-    screen->paint();
-    m_renderer->flip();
+    if (screen->handleIdle()) {
+      screen = m_stack.top();
+      screen->paint();
+      m_renderer->flip();
+    }
   }
 
   return true;
@@ -117,6 +123,26 @@ bool Application::handleIdle()
 Stack::Stack()
 {
   m_top = -1;
+
+  for (int i=0; i<MAX_STACK_SIZE; i++) {
+    m_screens[i] = 0;
+  }
+}
+
+Stack::~Stack()
+{
+  m_top = -1;
+  cleanUp();
+}
+
+void Stack::cleanUp()
+{
+  for (int i=m_top+1; i<MAX_STACK_SIZE; i++) {
+    if (m_screens[i]) {
+      delete m_screens[i];
+      m_screens[i] = 0;
+    }
+  }
 }
 
 bool Stack::push(Screen *screen)

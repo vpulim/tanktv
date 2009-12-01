@@ -176,7 +176,7 @@ void Database::scan(const char *dir)
 	  safe_strcpy(artist, tag->artist().isEmpty() ? "Unknown Artist" : tag->artist().to8Bit().c_str());
 	  safe_strcpy(album, tag->album().isEmpty() ? "Unknown Album" : tag->album().to8Bit().c_str());
 	  safe_strcpy(title, tag->title().to8Bit().c_str());
-	  safe_strcpy(genre, tag->genre().to8Bit().c_str());
+	  safe_strcpy(genre, tag->genre().isEmpty() ? "Unknown Genre" : tag->genre().to8Bit().c_str());
 	  if (!title[0]) {
 	    safe_strcpy(title, files[i].name());
 	    if ((c = strrchr(title, '.'))) *c=0;
