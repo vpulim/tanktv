@@ -122,24 +122,21 @@ void Audio::format_changed()
 
 void Audio::stop()
 {
-  if (m_state != STOPPED) {
-    m_state = STOPPED;
-    m_elapsed = m_remaining = 0;
-    if (m_thread) pthread_join(m_thread, 0);
-    m_thread = 0;
-    m_seek_percent = -1;
-    strcpy(m_file, "");
-  }
+  m_seek_percent = -1;
+  strcpy(m_file, "");
+  m_state = STOPPED;
+  m_elapsed = m_remaining = 0;
+  if (m_thread) pthread_join(m_thread, 0);
+  m_thread = 0;
 }
 
 void Audio::close()
 {
-  if (m_state != STOPPED) {
-    stop();
-    if (m_opened && m_audio) {
-      m_plugin->close(m_audio);
-      m_opened = false;
-    }
+  stop();
+
+  if (m_opened && m_audio) {
+    m_plugin->close(m_audio);
+    m_opened = false;
   }
 
   if (m_decoder) m_decoder->close();
@@ -181,7 +178,7 @@ void *Audio::play_thread(void *arg)
   }
 
   audio->m_thread = 0;
-  audio->close();
+  audio->stop();
 }
 
 void Audio::play()

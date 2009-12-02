@@ -66,6 +66,8 @@ bool FFMpegDecoder::open(const char *file)
   }
   m_buffer_size = AVCODEC_MAX_AUDIO_FRAME_SIZE;
 
+  debug("finished opening\n");
+
   return true;
 }
 
@@ -103,7 +105,10 @@ int FFMpegDecoder::read(unsigned char **buffer)
 
   if (packet.stream_index == 0) {
     bytes_read = m_buffer_size;
-    avcodec_decode_audio3(m_codec_ctx, (int16_t *)m_buffer, &bytes_read, &packet);
+    if (avcodec_decode_audio3(m_codec_ctx, (int16_t *)m_buffer, &bytes_read, &packet) < 0) {
+      debug("error decoding frame\n");
+      return 0;
+    }
   }
   else
     bytes_read = 0;

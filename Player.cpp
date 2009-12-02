@@ -48,7 +48,7 @@ void Player::paint()
   if (dirtyBox & Box(0, 0, 560, m_box.h)) {
     r->color(0x0, 0x0, 0x0, 0xff);
     r->rect(0, 0, 1280, 720);
-    r->image(100, 92, "images/unknown_album.png");
+    r->image(100, 192, "images/unknown_album.png");
   }
 
   if (dirtyBox & Box(570, 420, 620, 175)) {
