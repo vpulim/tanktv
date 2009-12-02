@@ -73,6 +73,7 @@ class Audio
   int m_length;
 
  private:
+  void format_changed();
   static void *play_thread(void *arg);
   void stop();
 

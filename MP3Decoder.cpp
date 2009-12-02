@@ -5,10 +5,10 @@ MP3Decoder::MP3Decoder()
     m_mpg123(0),
     m_total_frames(0)
 {
-  int errno;
+  int err;
 
-  if ((errno=mpg123_init()) != MPG123_OK || (m_mpg123=mpg123_new(NULL, &errno)) == NULL) {
-    debug("couldn't initialize mpg123: %s\n", mpg123_plain_strerror(errno));
+  if ((err=mpg123_init()) != MPG123_OK || (m_mpg123=mpg123_new(NULL, &err)) == NULL) {
+    debug("couldn't initialize mpg123: %s\n", mpg123_plain_strerror(err));
     mpg123_exit();
     m_mpg123 = 0;
     return;    
@@ -75,20 +75,21 @@ void MP3Decoder::close()
   }
 }
 
-bool MP3Decoder::read(unsigned char **buffer, size_t *bytes_read)
+int MP3Decoder::read(unsigned char **buffer)
 {
   off_t frames, frames_left;
-
+  size_t bytes_read;
+  
   *buffer = m_buffer;
 
-  if (mpg123_read(m_mpg123, m_buffer, m_buffer_size, bytes_read) != MPG123_OK)
-    return false;
+  if (mpg123_read(m_mpg123, m_buffer, m_buffer_size, &bytes_read) != MPG123_OK)
+    return -1;
 
-  mpg123_position(m_mpg123, 0, *bytes_read, &frames, &frames_left, NULL, NULL);  
+  mpg123_position(m_mpg123, 0, bytes_read, &frames, &frames_left, NULL, NULL);  
   m_total_frames = frames + frames_left;
   m_position = frames * 1.0 / m_total_frames;
 
-  return true;
+  return (int)bytes_read;
 }
 
 void MP3Decoder::seek(float percent) 

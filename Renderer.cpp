@@ -133,7 +133,7 @@ void Renderer::loop(EventListener *listener)
 #ifdef NMT
 	if (event.key == (Key)DIKS_PAUSE) event.key = (Key)DIKS_PLAY;
 #endif
-	// debug("got key: 0x%x 0x%x\n", (int)(event.key & 0xFF00), (int)(event.key & 0xFF));
+        debug("got key: 0x%x 0x%x\n", (int)(event.key & 0xFF00), (int)(event.key & 0xFF));
 	if (!listener->handleEvent(event)) m_exit = true;
       }
     }

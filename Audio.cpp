@@ -35,7 +35,8 @@ Audio::Audio()
 
   strcpy(m_file, "");
 
-  m_decoder = new MP3Decoder();
+  //  m_decoder = new MP3Decoder();
+  m_decoder = new FFMpegDecoder();
   if (!m_decoder->valid()) {
     delete m_decoder;
     m_decoder = 0;
@@ -58,6 +59,10 @@ Audio::Audio()
   debug("initializing plugin...\n");
   m_audio = m_plugin->init(NULL, &param, NULL);
 #endif
+
+  m_format.bits = 16;
+  m_format.channels = 0;
+  m_format.sample_rate = 0;
 }
 
 Audio::~Audio()
@@ -85,22 +90,10 @@ bool Audio::open(const char *path, const char *artist, const char *album, const 
   safe_strcpy(m_artist, artist);
   safe_strcpy(m_genre, genre);
 
-#ifdef NMT
-  if (!m_opened) {
-    m_format.sample_rate = m_decoder->rate();
-    m_format.channels = m_decoder->channels();
-    m_format.bits = m_decoder->bits();
-    m_plugin->open(m_audio, &m_format, NULL);
-    m_opened = true;
+  if (m_decoder->channels() && m_decoder->rate() && 
+      (m_format.sample_rate != m_decoder->rate() || m_format.channels != m_decoder->channels())) {
+    format_changed();
   }
-  else if (m_format.sample_rate != m_decoder->rate() || m_format.channels != m_decoder->channels()) {
-    m_plugin->close(m_audio);
-    m_format.sample_rate = m_decoder->rate();
-    m_format.channels = m_decoder->channels();
-    m_format.bits = m_decoder->bits();
-    m_plugin->open(m_audio, &m_format, NULL);
-  }
-#endif
 
   safe_strcpy(m_file, path);
 
@@ -109,6 +102,22 @@ bool Audio::open(const char *path, const char *artist, const char *album, const 
   m_seek_percent = -1;
   pthread_create(&m_thread, NULL, play_thread, this);
   return true;
+}
+
+void Audio::format_changed()
+{
+  debug("format changed. channels=%d, rate=%d, bits=%d\n", 
+        m_decoder->channels(), m_decoder->rate(), m_decoder->bits());
+#ifdef NMT
+  if (m_opened) m_plugin->close(m_audio);
+#endif
+  m_format.sample_rate = m_decoder->rate();
+  m_format.channels = m_decoder->channels();
+  m_format.bits = m_decoder->bits();
+#ifdef NMT
+  m_plugin->open(m_audio, &m_format, NULL);
+#endif
+  m_opened = true;
 }
 
 void Audio::stop()
@@ -140,7 +149,7 @@ void *Audio::play_thread(void *arg)
 {
   Audio *audio = (Audio *)arg;
   unsigned char *buffer;
-  size_t bytes;
+  int bytes;
 
   if (audio->m_decoder) {
     do {
@@ -154,13 +163,20 @@ void *Audio::play_thread(void *arg)
 	audio->m_seek_percent = -1;
       }
       
-      if (!audio->m_decoder->read(&buffer, &bytes)) break;
+      if ((bytes = audio->m_decoder->read(&buffer)) < 0) break;
       
       if (audio->m_length) {
 	audio->m_elapsed = (int)(audio->m_decoder->position() * audio->m_length);
 	audio->m_remaining = audio->m_length - audio->m_elapsed;
       }
-      audio->m_plugin->play(audio->m_audio, buffer, bytes, NULL);
+      
+      if (audio->m_decoder->channels() && audio->m_decoder->rate() && 
+          (audio->m_format.sample_rate != audio->m_decoder->rate() ||
+           audio->m_format.channels != audio->m_decoder->channels())) {
+        audio->format_changed();
+      }
+
+      if (bytes) audio->m_plugin->play(audio->m_audio, buffer, (size_t)bytes, NULL);
     } while (audio->m_state != STOPPED);
   }
 

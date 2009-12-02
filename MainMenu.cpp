@@ -3,6 +3,7 @@
 MainMenu::MainMenu(Application *application)
   : Menu(application, "tankTV")
 {
+  m_top = 180;
   new ArrowItem(this, "Movies");
   new ArrowItem(this, "TV Shows");
   new ArrowItem(this, "Music");

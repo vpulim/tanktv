@@ -63,6 +63,7 @@ class MusicMenu : public Menu
  public:
   MusicMenu(Application *application);
   virtual void selectItem(MenuItem *menuItem);
+  virtual bool paintDetails(MenuItem *menuItem);
 };
 
 class SettingsMenu : public Menu

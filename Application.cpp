@@ -54,6 +54,8 @@ void Application::setScreen(Screen *screen)
     screen->setDirty();
     screen->paint();
     m_renderer->flip();
+    screen->paint();
+    m_renderer->flip();
   }
 }
 
@@ -74,11 +76,28 @@ void Application::exit()
 void Application::go(Screen *screen) 
 { 
   m_stack.push(screen); 
+  if (m_renderer->initialized()) {
+    screen->setDirty();
+    screen->paint();
+    m_renderer->flip();
+    screen->paint();
+    m_renderer->flip();
+  }
 }
 
 void Application::back() 
 { 
-  if (m_stack.size() > 1) m_stack.pop(); 
+  if (m_stack.size() > 1) {
+    m_stack.pop(); 
+    if (m_renderer->initialized()) {
+      Screen *screen = m_stack.top();
+      screen->setDirty();
+      screen->paint();
+      m_renderer->flip();
+      screen->paint();
+      m_renderer->flip();
+    }
+  }
 }
 
 bool Application::handleEvent(Event &event)

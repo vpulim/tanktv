@@ -6,7 +6,7 @@ Menu::Menu(Application *application, const char *title)
   : Screen(application),
     m_size(0),
     m_current(-1),
-    m_top(180),
+    m_top(160),
     m_idle_count(0)
 {  
   setLabel(title);
@@ -30,37 +30,44 @@ void Menu::add(MenuItem *menuItem)
 
 bool Menu::handleEvent(Event &event)
 {
-  switch (event.key) {
-  case KEY_UP:
-    if (m_current > 0) {
-      m_current--; 
+  if (m_current > -1) {
+    switch (event.key) {
+    case KEY_UP: if (m_current > 0) m_current--; break;
+    case KEY_DOWN: if (m_current < m_size - 1) m_current++; break;
+    case KEY_PAGE_UP: 
+      m_current -= 10; 
+      if (m_current < 0) m_current = 0;
+      break;
+    case KEY_PAGE_DOWN: 
+      m_current += 10; 
+      if (m_current > m_size - 1) m_current = m_size - 1;
+      break;
+    case KEY_ENTER: if (m_current > -1) m_menuItems[m_current]->select(); break;
     }
-    break;
-  case KEY_DOWN:
-    if (m_current < m_size - 1) {
-      m_current++;
-    }
-    break;
-  case KEY_ENTER:
-    if (m_current > -1) {
-      m_menuItems[m_current]->select();
-    }
-    break;
+    debug("current item: %s\n", m_menuItems[m_current]->label());
   }
-  if (m_current > -1) debug("current item: %s\n", m_menuItems[m_current]->label());
+  clearDirty();
   setDirtyRegion(Box(MENU_X, m_top, 445, m_box.h - m_top));
   m_idle_count=0;
+  debug("handleEvent\n");
   return true;
 }
 
 bool Menu::handleIdle()
 {
-  m_idle_count++;
-  if (m_idle_count < 5) return true;
-  if (m_idle_count == 5) setDirtyRegion(Box(0, 0, MENU_X - 60, m_box.h));    
-
   int start, end;
   bool dirty = false;
+
+  m_idle_count++;
+  if (m_idle_count < 8) return false;
+  if (m_idle_count == 8) {
+    debug("handleIdle\n");
+    setDirtyRegion(Box(0, 0, MENU_X - 60, m_box.h));    
+    paint();
+    m_app->renderer()->flip();
+    setDirtyRegion(Box(0, 0, MENU_X - 60, m_box.h));    
+    dirty = true;
+  }
 
   getVisibleRange(&start, &end);        
     
@@ -123,7 +130,7 @@ void Menu::paint()
   Box dirtyBox = getDirtyRegion(buffer);
 
   int x = MENU_X;
-  
+
   if (dirtyBox & Box(0, 0, x-60, m_box.h)) {
     r->color(0, 0, 0, 0xff);
     r->rect(0, 0, x - 60, m_box.h);      

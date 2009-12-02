@@ -43,13 +43,19 @@ public:
   {
     album_id = strtol(result["rowid"], NULL, 10);
     safe_strcpy(album, result["album"]);
-    safe_strcpy(artist, result["artist"]);
     safe_strcpy(genre, result["genre"]);
-    artist_id = result.find("artist_id")==result.end() ? 0 : strtol(result["artist_id"], NULL, 10);
     genre_id = result.find("genre_id")==result.end() ? 0 : strtol(result["genre_id"], NULL, 10);
     tracks = strtol(result["tracks"], NULL, 10);
     length = strtol(result["length"], NULL, 10);
     num_artists = result.find("num_artists")==result.end() ? 1 : strtol(result["num_artists"], NULL, 10);
+    if (num_artists > 1) {
+      safe_strcpy(artist, "Various");
+      artist_id = 0;
+    }
+    else {
+      safe_strcpy(artist, result["artist"]);
+      artist_id = result.find("artist_id")==result.end() ? 0 : strtol(result["artist_id"], NULL, 10);
+    }
   }
 };
 
@@ -119,6 +125,32 @@ public:
     }
     m_app->go(new Player(m_app));        
   }
+
+  bool paintDetails(MenuItem *menuItem)
+  {
+    Song &song = m_songs[menuItem->index()];
+    Renderer *r = m_app->renderer();
+    char text[256];
+    r->image(143, 92, "images/unknown_album.png");
+    r->font(BOLD_FONT, 23);
+    r->color(0xff, 0xff, 0xff, 0xff);
+    r->text(81, 518, song.title, 504);
+    r->color(0x66, 0x66, 0x66, 0xff);
+    r->font(REGULAR_FONT, 18);    
+    r->text(148, 563, "Album:", 0, JUSTIFY_RIGHT);
+    r->text(148, 586, "Artist:", 0, JUSTIFY_RIGHT);
+    r->text(148, 609, "Genre:", 0, JUSTIFY_RIGHT);
+    r->text(148, 632, "Length:", 0, JUSTIFY_RIGHT);
+    r->color(0xff, 0xff, 0xff, 0xff);
+    r->text(153, 563, song.album, 432);
+    r->text(153, 586, song.artist, 432);
+    r->text(153, 609, song.genre, 432);
+    sprintf(text, "%d:%02d", song.length / 60, song.length % 60); 
+    r->text(153, 632, text, 0);
+    r->color(0x33, 0x33, 0x33, 0xff);
+    r->rect(81, 531, 504, 3);
+    r->rect(81, 647, 504, 3);
+  }
 };
 
 class AlbumsMenu : public Menu
@@ -153,6 +185,33 @@ public:
     Album *album = &m_albums[menuItem->index()];
     m_app->go(new SongsMenu(m_app, album));        
   }
+
+  bool paintDetails(MenuItem *menuItem)
+  {
+    Album &album = m_albums[menuItem->index()];
+    Renderer *r = m_app->renderer();
+    char text[256];
+    r->image(143, 92, "images/unknown_album.png");
+    r->font(BOLD_FONT, 23);
+    r->color(0xff, 0xff, 0xff, 0xff);
+    r->text(81, 518, album.album, 504);
+    r->color(0x66, 0x66, 0x66, 0xff);
+    r->font(REGULAR_FONT, 18);    
+    r->text(148, 563, "Artist:", 0, JUSTIFY_RIGHT);
+    r->text(148, 586, "Genre:", 0, JUSTIFY_RIGHT);
+    r->text(148, 609, "Tracks:", 0, JUSTIFY_RIGHT);
+    r->text(148, 632, "Length:", 0, JUSTIFY_RIGHT);
+    r->color(0xff, 0xff, 0xff, 0xff);
+    r->text(153, 563, album.artist, 432);
+    r->text(153, 586, album.genre, 432);
+    sprintf(text, "%d", album.tracks);
+    r->text(153, 609, text, 0);
+    sprintf(text, "%d:%02d", album.length / 60, album.length % 60); 
+    r->text(153, 632, text, 0);
+    r->color(0x33, 0x33, 0x33, 0xff);
+    r->rect(81, 531, 504, 3);
+    r->rect(81, 647, 504, 3);
+  }
 };
 
 class ArtistsMenu : public Menu
@@ -185,6 +244,12 @@ public:
     Artist *artist = &m_artists[menuItem->index()];
     m_app->go(new AlbumsMenu(m_app, artist));    
   }
+
+  bool paintDetails(MenuItem *menuItem)
+  {
+    Renderer *r = m_app->renderer();
+    r->image(143, 92, "images/unknown_music.png");
+  }
 };
 
 class GenresMenu : public Menu
@@ -211,6 +276,12 @@ public:
     Genre *genre = &m_genres[menuItem->index()];
     m_app->go(new ArtistsMenu(m_app, genre));    
   }
+
+  bool paintDetails(MenuItem *menuItem)
+  {
+    Renderer *r = m_app->renderer();
+    r->image(143, 92, "images/unknown_music.png");
+  }
 };
 
 MusicMenu::MusicMenu(Application *application)
@@ -232,4 +303,10 @@ void MusicMenu::selectItem(MenuItem *menuItem)
     m_app->go(new SongsMenu(m_app));
   if (!strcmp(menuItem->label(), "Genres"))
     m_app->go(new GenresMenu(m_app));
+}
+
+bool MusicMenu::paintDetails(MenuItem *menuItem)
+{
+  Renderer *r = m_app->renderer();
+  r->image(143, 92, "images/unknown_music.png");
 }

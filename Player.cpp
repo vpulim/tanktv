@@ -61,12 +61,12 @@ void Player::paint()
     if (!a->isStopped()) {
       r->color(0xff, 0xff, 0xff, 0xff);
       r->font(BOLD_FONT, 37);
-      if (a->title()) r->text(575, 455, a->title());
+      if (a->title()) r->text(575, 455, a->title(), 550);
 
       r->color(0xad, 0xad, 0xad, 0xff);
       r->font(REGULAR_FONT, 29);
-      if (a->artist()) r->text(575, 490, a->artist());
-      if (a->album()) r->text(575, 525, a->album());
+      if (a->artist()) r->text(575, 490, a->artist(), 550);
+      if (a->album()) r->text(575, 525, a->album(), 550);
 
       r->color(0xff, 0xff, 0xff, 0xff);
       r->font(BOLD_FONT, 18);
