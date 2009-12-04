@@ -37,7 +37,6 @@ Application::Application(Renderer *renderer, Audio *audio, Database *database)
   r->font(REGULAR_FONT, 23);
   r->font(REGULAR_FONT, 29);
   m_audio->open("images/start.mp3", "", "", "", "");
-  //  m_audio->close();
 
   r->color(0x0, 0x0, 0x0, 0xff);
   r->rect(0, 0, r->width(), r->height());

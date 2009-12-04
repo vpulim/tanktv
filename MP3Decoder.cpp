@@ -50,6 +50,11 @@ bool MP3Decoder::open(const char *file)
 
   m_buffer_size = mpg123_outblock(m_mpg123);
   m_buffer = (unsigned char *)malloc(m_buffer_size);
+  if (!m_buffer) {
+    debug("couldn't allocate audio buffer\n");
+    m_buffer_size = 0;
+    return false;
+  }
 
   m_bits = 16;
   
@@ -72,6 +77,12 @@ void MP3Decoder::close()
 {
   if (m_mpg123) {
     mpg123_close(m_mpg123);
+  }
+
+  if (m_buffer) {
+    free(m_buffer);
+    m_buffer = 0;
+    m_buffer_size = 0;
   }
 }
 

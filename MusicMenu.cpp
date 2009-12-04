@@ -102,13 +102,13 @@ public:
     char sql[512];
 
     if (album && album->num_artists > 1)
-      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id and album=%Q order by title", album->album);
+      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id and album=%Q order by upper(title)", album->album);
     else if (album && album->genre_id)
-      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id and album_id=%d and genre_id=%d order by title", album->album_id, album->genre_id);
+      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id and album_id=%d and genre_id=%d order by upper(title)", album->album_id, album->genre_id);
     else if (album)
-      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id and album_id=%d order by title", album->album_id);
+      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id and album_id=%d order by upper(title)", album->album_id);
     else
-      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id order by title");
+      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id order by upper(title)");
     if (db->execute(sql))
       while ((result=db->next())) {
         m_songs.push_back(Song(*result));
@@ -168,11 +168,11 @@ public:
     char sql[512];
 
     if (artist && artist->genre_id) 
-      sqlite3_snprintf(sizeof(sql), sql, "select albums.rowid, count(1) as tracks, sum(length) as length, genre, artist, album from genres, albums, artists, songs where genres.rowid=genre_id and artists.rowid=artist_id and albums.rowid=album_id and artist_id=%d and genre_id=%d group by album_id order by album", artist->artist_id, artist->genre_id);
+      sqlite3_snprintf(sizeof(sql), sql, "select albums.rowid, count(1) as tracks, sum(length) as length, genre, artist, album from genres, albums, artists, songs where genres.rowid=genre_id and artists.rowid=artist_id and albums.rowid=album_id and artist_id=%d and genre_id=%d group by album_id order by upper(album)", artist->artist_id, artist->genre_id);
     else if (artist)
-      sqlite3_snprintf(sizeof(sql), sql, "select albums.rowid, count(1) as tracks, sum(length) as length, genre, artist, album from genres, albums, artists, songs where genres.rowid=genre_id and artists.rowid=artist_id and albums.rowid=album_id and artist_id=%d group by album_id order by album", artist->artist_id);
+      sqlite3_snprintf(sizeof(sql), sql, "select albums.rowid, count(1) as tracks, sum(length) as length, genre, artist, album from genres, albums, artists, songs where genres.rowid=genre_id and artists.rowid=artist_id and albums.rowid=album_id and artist_id=%d group by album_id order by upper(album)", artist->artist_id);
     else
-      sqlite3_snprintf(sizeof(sql), sql, "select count(distinct artist_id) as num_artists, albums.rowid, count(1) as tracks, sum(length) as length, genre, artist, album from genres, albums, artists, songs where genres.rowid=genre_id and artists.rowid=artist_id and albums.rowid=album_id group by album order by album");      
+      sqlite3_snprintf(sizeof(sql), sql, "select count(distinct artist_id) as num_artists, albums.rowid, count(1) as tracks, sum(length) as length, genre, artist, album from genres, albums, artists, songs where genres.rowid=genre_id and artists.rowid=artist_id and albums.rowid=album_id group by album order by upper(album)");      
     if (db->execute(sql))
       while ((result=db->next())) {
         m_albums.push_back(Album(*result));
@@ -229,9 +229,9 @@ public:
     char sql[256];
 
     if (genre) 
-      sqlite3_snprintf(sizeof(sql), sql, "select artists.rowid, artist, genre_id from artists, albums, songs where artists.rowid=artist_id and albums.rowid=album_id and genre_id=%d group by artist_id order by artist", genre->genre_id);
+      sqlite3_snprintf(sizeof(sql), sql, "select artists.rowid, artist, genre_id from artists, albums, songs where artists.rowid=artist_id and albums.rowid=album_id and genre_id=%d group by artist_id order by upper(artist)", genre->genre_id);
     else
-      sqlite3_snprintf(sizeof(sql), sql, "select rowid, artist from artists order by artist");
+      sqlite3_snprintf(sizeof(sql), sql, "select rowid, artist from artists order by upper(artist)");
     if (db->execute(sql))
       while ((result=db->next())) {
         m_artists.push_back(Artist(*result));
@@ -264,7 +264,7 @@ public:
   {
     Database *db = m_app->database();
     Result *result;
-    if (db->execute("select rowid, genre from genres order by genre"))
+    if (db->execute("select rowid, genre from genres order by upper(genre)"))
       while ((result=db->next())) {
         m_genres.push_back(Genre(*result));
 	new ArrowItem(this, (*result)["genre"]);

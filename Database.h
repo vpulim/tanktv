@@ -5,17 +5,12 @@
 
 #include <sqlite3.h>
 #include "config.h"
+#include "Types.h"
 
 #define DB_FILE "db"
 #define MAX_SQL_SIZE 1024*10
 
-struct cmp_str {
-  bool operator()(const char *a,const  char *b) {
-    return std::strcmp(a, b) < 0;
-  }
-};
-
-typedef std::map<char *, char *, cmp_str> Result;
+typedef std::map<char *, char *, cmp_strcase> Result;
 
 class Database
 {

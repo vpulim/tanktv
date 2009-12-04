@@ -36,7 +36,7 @@ void FileMenu::selectItem(MenuItem *menuItem)
     else if (file->isAudio()) {
       if (strcmp(m_app->audio()->nowPlaying(), file->path())) {
 	debug("opening %s...\n", file->path());
-	if (!m_app->audio()->open(file->path(), "", "", file->name(), "", 0)) 
+	if (!m_app->audio()->open(file->path(), "", "", "", "", 0)) 
 	  return;
       }
       m_app->go(new Player(m_app));

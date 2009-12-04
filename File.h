@@ -20,9 +20,11 @@ class File
 
  public:
   static void listDirectory(const char *dir, std::vector<File> &files, bool mediaOnly=true);
+  static int size(const char *file);
   const char *name() const { return m_name; }
   const char *path() const { return m_path; }
   const char *extension();
+  static const char *extension(const char *name);
   bool isAudio();
   bool isVideo();
   bool isDirectory() { return m_isdir; }

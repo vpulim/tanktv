@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <dlfcn.h>
 #include "Audio.h"
+#include "File.h"
 #include "Utils.h"
 
 Audio::Audio()
@@ -27,7 +28,7 @@ Audio::Audio()
     { "line_count", "2048", 1, false },
     { "fifo_us", "500000", 1, false },
     { "mixer_type", "software", 1, false }
-    //    { "hdmi", "sii9134", 1, false },
+    // { "hdmi", "sii9134", 1, false },
   };
   struct config_param param = { "", 1, block_params, 6 };
 
@@ -35,12 +36,15 @@ Audio::Audio()
 
   strcpy(m_file, "");
 
-  //  m_decoder = new MP3Decoder();
-  m_decoder = new FFMpegDecoder();
-  if (!m_decoder->valid()) {
-    delete m_decoder;
-    m_decoder = 0;
-  }
+  Decoder *decoder;
+  decoder = new MP3Decoder;
+  m_decoders.push_back(decoder);
+  m_decoder_map["mp3"] = decoder;
+
+  decoder = new MP4Decoder();
+  m_decoders.push_back(decoder);
+  m_decoder_map["mp4"] = decoder;
+  m_decoder_map["m4a"] = decoder;
 
 #ifdef NMT
   m_dl = dlopen(PLUGIN, RTLD_LAZY|RTLD_GLOBAL);
@@ -71,16 +75,26 @@ Audio::~Audio()
   close();
   if (m_audio) m_plugin->finish(m_audio);
   if (m_dl) dlclose(m_dl);
-  if (m_decoder) delete m_decoder;
+
+  for (int i=0; i < m_decoders.size(); i++)
+    delete m_decoders[i];
 }
 
 bool Audio::open(const char *path, const char *artist, const char *album, const char *title, const char *genre, int length)
 {
-  if (!m_decoder) return false;
-
   stop();
 
-  debug("playing mp3: %s\n", path);
+  const char *ext = File::extension(path);
+  if (!ext) return false;
+
+  if (m_decoder_map.find(ext) == m_decoder_map.end()) {
+    debug("couldn't find decoder for file extension: %s\n", ext);
+    return false;
+  }
+
+  m_decoder = m_decoder_map[ext];
+
+  debug("playing %s using: %s\n", path, m_decoder->name());
 
   m_decoder->open(path);
 
@@ -128,6 +142,10 @@ void Audio::stop()
   m_elapsed = m_remaining = 0;
   if (m_thread) pthread_join(m_thread, 0);
   m_thread = 0;
+  if (m_decoder) {
+    m_decoder->close();
+    m_decoder = 0;
+  }
 }
 
 void Audio::close()
@@ -138,8 +156,6 @@ void Audio::close()
     m_plugin->close(m_audio);
     m_opened = false;
   }
-
-  if (m_decoder) m_decoder->close();
 }
 
 void *Audio::play_thread(void *arg)
@@ -147,6 +163,7 @@ void *Audio::play_thread(void *arg)
   Audio *audio = (Audio *)arg;
   unsigned char *buffer;
   int bytes;
+  int length;
 
   if (audio->m_decoder) {
     do {
@@ -161,10 +178,12 @@ void *Audio::play_thread(void *arg)
       }
       
       if ((bytes = audio->m_decoder->read(&buffer)) < 0) break;
-      
-      if (audio->m_length) {
-	audio->m_elapsed = (int)(audio->m_decoder->position() * audio->m_length);
-	audio->m_remaining = audio->m_length - audio->m_elapsed;
+
+      length = audio->m_decoder->length();
+      if (!length) length = audio->m_length;
+      if (length) {
+	audio->m_elapsed = (int)(audio->m_decoder->position() * length);
+	audio->m_remaining = length - audio->m_elapsed;
       }
       
       if (audio->m_decoder->channels() && audio->m_decoder->rate() && 
@@ -208,8 +227,8 @@ void Audio::forward() {
 const char *Audio::title()
 {
   if (m_title && m_title[0]) return m_title;
-  if (m_decoder) return m_decoder->title();
-  return NULL;
+  if (m_decoder && m_decoder->title()) return m_decoder->title();
+  return strrchr(m_file, '/')+1;
 }
 
 const char *Audio::album()

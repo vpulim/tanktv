@@ -1,3 +1,4 @@
+#include "File.h"
 #include "Decoder.h"
 
 FFMpegDecoder::FFMpegDecoder()
@@ -6,7 +7,9 @@ FFMpegDecoder::FFMpegDecoder()
     m_codec_ctx(0),
     m_codec(0),
     m_frame(0),
-    m_buffer(0)
+    m_audio_stream(0),
+    m_buffer(0),
+    m_file_size(0)
 {
   av_register_all();
 }
@@ -25,6 +28,8 @@ bool FFMpegDecoder::open(const char *file)
 {
   close();
 
+  m_position = 0;
+
   if (av_open_input_file(&m_format, file, 0, 0, 0) != 0) {
     debug("couldn't open media file for playback: %s\n", file);
     m_format = 0;
@@ -33,10 +38,24 @@ bool FFMpegDecoder::open(const char *file)
 
   debug("opened %s (%s)\n", file, m_format->iformat->long_name);  
 
-  m_codec_ctx = m_format->streams[0]->codec;
+  m_file_size = File::size(file);
+
+  for (int i=0; i < m_format->nb_streams; i++) {
+    if (m_format->streams[i]->codec->codec_type == CODEC_TYPE_AUDIO) {
+      m_audio_stream = m_format->streams[i];
+      break;
+    }
+  }
+  if (!m_audio_stream) {
+    debug("no audio streams found in %s\n", file);
+    close();
+    return false;
+  }
+
+  m_codec_ctx = m_audio_stream->codec;
   m_codec = avcodec_find_decoder(m_codec_ctx->codec_id);
   if (!m_codec) {
-    debug("couldn't find a decoder!\n"); 
+    debug("couldn't find a decoder for %s\n", file); 
     close();
     return false;
   }
@@ -52,27 +71,28 @@ bool FFMpegDecoder::open(const char *file)
 
   m_frame = avcodec_alloc_frame();
   if (!m_frame) {
-    debug("couldn't allocate frame!\n");
+    debug("couldn't allocate frame while opening %s\n", file);
     close();
     return false;
   }
 
   m_buffer = (unsigned char *)av_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE);
   if (!m_buffer) {
-    debug("couldn't allocate playback buffer!\n");
+    debug("couldn't allocate playback buffer while opening %s\n", file);
     m_buffer_size = 0;
     close();
     return false;
   }
   m_buffer_size = AVCODEC_MAX_AUDIO_FRAME_SIZE;
 
-  debug("finished opening\n");
-
   return true;
 }
 
 void FFMpegDecoder::close()
 {
+  m_audio_stream = 0;
+  m_file_size = 0;
+
   if (m_buffer) {
     av_free(m_buffer);
     m_buffer = 0 ;
@@ -100,8 +120,19 @@ int FFMpegDecoder::read(unsigned char **buffer)
   int bytes_read;
   *buffer = m_buffer;
 
+  if (!m_format) return -1;
+
   if (av_read_frame(m_format, &packet) < 0)
     return -1;
+
+  if (m_audio_stream->duration > 1) {
+    m_position = packet.pts * 1.0 / m_audio_stream->duration;
+  }
+  else {
+    m_position = m_audio_stream->parser->frame_offset * 1.0 / m_file_size;
+  }
+
+  debug("pos: %f\n", m_position);
 
   if (packet.stream_index == 0) {
     bytes_read = m_buffer_size;
@@ -118,4 +149,67 @@ int FFMpegDecoder::read(unsigned char **buffer)
   if (m_codec_ctx->sample_rate) m_rate = m_codec_ctx->sample_rate;
   if (m_codec_ctx->channels) m_channels = m_codec_ctx->channels;
   return bytes_read;
+}
+
+void FFMpegDecoder::seek(float percent) 
+{
+  if (m_audio_stream && m_audio_stream->duration > 1) {
+    av_seek_frame(m_format, m_audio_stream->index, (int64_t)(percent * m_audio_stream->duration), 0);
+  }
+  else {
+    av_seek_frame(m_format, m_audio_stream->index, (int64_t)(percent * m_file_size), AVSEEK_FLAG_BYTE);
+  }
+}
+
+int FFMpegDecoder::length()
+{
+  if (m_audio_stream && m_audio_stream->duration > 1) {
+    return m_audio_stream->time_base.num * m_audio_stream->duration / m_audio_stream->time_base.den;
+  }
+  return 0;
+}
+
+const char *FFMpegDecoder::artist()
+{
+  if (m_format && m_format->metadata) {
+    AVMetadataTag *tag;
+    if ((tag=av_metadata_get(m_format->metadata, "TPE1", NULL, AV_METADATA_IGNORE_SUFFIX)) ||
+        (tag=av_metadata_get(m_format->metadata, "artist", NULL, AV_METADATA_IGNORE_SUFFIX)) ||
+        (tag=av_metadata_get(m_format->metadata, "author", NULL, AV_METADATA_IGNORE_SUFFIX)))
+      return tag->value;
+  }
+  return NULL;
+}
+
+const char *FFMpegDecoder::album()
+{
+  if (m_format && m_format->metadata) {
+    AVMetadataTag *tag;
+    if ((tag=av_metadata_get(m_format->metadata, "TALB", NULL, AV_METADATA_IGNORE_SUFFIX)) ||
+        (tag=av_metadata_get(m_format->metadata, "album", NULL, AV_METADATA_IGNORE_SUFFIX)))
+      return tag->value;
+  }
+  return NULL;
+}
+
+const char *FFMpegDecoder::title()
+{
+  if (m_format && m_format->metadata) {
+    AVMetadataTag *tag;
+    if ((tag=av_metadata_get(m_format->metadata, "TIT2", NULL, AV_METADATA_IGNORE_SUFFIX)) ||
+        (tag=av_metadata_get(m_format->metadata, "title", NULL, AV_METADATA_IGNORE_SUFFIX)))
+      return tag->value;
+  }
+  return NULL;
+}
+
+const char *FFMpegDecoder::genre()
+{
+  if (m_format && m_format->metadata) {
+    AVMetadataTag *tag;
+    if ((tag=av_metadata_get(m_format->metadata, "TCON", NULL, AV_METADATA_IGNORE_SUFFIX)) ||
+        (tag=av_metadata_get(m_format->metadata, "genre", NULL, AV_METADATA_IGNORE_SUFFIX)))
+      return tag->value;
+  }
+  return NULL;
 }

@@ -4,8 +4,8 @@
 #include <tag.h>
 #include <fileref.h>
 #include "Database.h"
-#include "File.h"
 #include "Utils.h"
+#include "File.h"
 
 Database::Database(const char *file)
   : m_db(NULL),

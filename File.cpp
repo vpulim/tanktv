@@ -15,6 +15,13 @@ File::File(const char *name, const char *path, bool isDirectory)
   safe_strcpy(m_path, path);
 }
 
+int File::size(const char *file)
+{
+  struct stat st;
+  stat(file, &st);
+  return st.st_size;
+}
+
 bool operator< (const File& f, const File& g)
 {
   return strcasecmp(f.name(), g.name()) < 0;
@@ -72,6 +79,13 @@ const char *File::extension(const char *name, char *dst)
   while (*ext) *s++ = tolower(*ext++);
   *s = 0;
   return dst;
+}
+
+const char *File::extension(const char *name)
+{
+  char *ext = strrchr(name, '.');
+  if (ext) return (char *)(ext+1);
+  return NULL;
 }
 
 bool File::isAudio()

@@ -5,8 +5,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <pthread.h>
+#include <map>
+#include <vector>
 #include "config.h"
 #include "Decoder.h"
+#include "Types.h"
 
 #define PLUGIN "/share/Apps/TankTV/lib/smp86xx_plugin.so"
 #define GError void
@@ -50,11 +53,15 @@ struct audio_output_plugin {
   const struct mixer_plugin *mixer_plugin;
 };
 
+typedef std::map<const char *, Decoder *, cmp_strcase> decoder_map;
+
 class Audio
 {
  private:
   enum state_t { STOPPED, PLAYING, PAUSED };
   void *m_audio;
+  std::vector<Decoder *> m_decoders;
+  decoder_map m_decoder_map;
   bool m_opened;
   struct audio_output_plugin *m_plugin;
   void *m_dl;
