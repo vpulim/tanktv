@@ -3,7 +3,6 @@
 
 #include <string>
 #include <curl/curl.h>
-#include "config.h"
 
 class Curl
 {
