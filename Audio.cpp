@@ -78,6 +78,14 @@ Audio::~Audio()
 
   for (int i=0; i < m_decoders.size(); i++)
     delete m_decoders[i];
+
+  for (sound_map::const_iterator i=m_sound_cache.begin(); i != m_sound_cache.end(); i++) {
+    audio_buffer *buffer = i->second;
+    if (buffer) {
+      free(buffer->data);
+      free(buffer);
+    }
+  }
 }
 
 bool Audio::open(const char *path, const char *artist, const char *album, const char *title, const char *genre, int length)
@@ -120,18 +128,30 @@ bool Audio::open(const char *path, const char *artist, const char *album, const 
 
 void Audio::format_changed()
 {
+  format_changed(m_decoder->rate(), 
+                 m_decoder->channels(),
+                 m_decoder->bits());
+}
+
+void Audio::format_changed(uint32_t rate, uint8_t channels, uint8_t bits)
+{  
+  if (m_opened && 
+      rate == m_format.sample_rate && 
+      channels == m_format.channels &&
+      bits == m_format.bits) return;
+
   debug("format changed. channels=%d, rate=%d, bits=%d\n", 
-        m_decoder->channels(), m_decoder->rate(), m_decoder->bits());
+        channels, rate, bits);
 #ifdef NMT
   if (m_opened) m_plugin->close(m_audio);
 #endif
-  m_format.sample_rate = m_decoder->rate();
-  m_format.channels = m_decoder->channels();
-  m_format.bits = m_decoder->bits();
+  m_format.sample_rate = rate;
+  m_format.channels = channels;
+  m_format.bits = bits;
 #ifdef NMT
   m_plugin->open(m_audio, &m_format, NULL);
 #endif
-  m_opened = true;
+  m_opened = true;  
 }
 
 void Audio::stop()
@@ -155,6 +175,34 @@ void Audio::close()
   if (m_opened && m_audio) {
     m_plugin->close(m_audio);
     m_opened = false;
+  }
+}
+
+void Audio::playSound(const char *path)
+{
+  debug("in playSound\n");
+  if (isPlaying()) return;
+
+  debug("not isPlaying\n");
+
+  audio_buffer *buffer = NULL;
+  if (m_sound_cache.find(path) == m_sound_cache.end()) {
+    FILE *file = fopen(path, "r");
+    if (file) {
+      buffer = (audio_buffer *)malloc(sizeof(audio_buffer));
+      buffer->size = File::size(path);
+      buffer->data = (unsigned char *)malloc(buffer->size);
+      fread(buffer->data, 1, buffer->size, file);
+      fclose(file);
+    }    
+    m_sound_cache[path] = buffer;
+  }
+
+  buffer = m_sound_cache[path];
+  if (buffer) {
+    debug("playing sound: %d\n", buffer->size);
+    format_changed(44100, 2, 16);
+    m_plugin->play(m_audio, buffer->data, buffer->size, NULL);  
   }
 }
 

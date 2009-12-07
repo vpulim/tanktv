@@ -53,7 +53,13 @@ struct audio_output_plugin {
   const struct mixer_plugin *mixer_plugin;
 };
 
+typedef struct {
+  unsigned char *data;
+  size_t size;
+} audio_buffer;
+
 typedef std::map<const char *, Decoder *, cmp_strcase> decoder_map;
+typedef std::map<const char *, audio_buffer *, cmp_str> sound_map;
 
 class Audio
 {
@@ -62,6 +68,7 @@ class Audio
   void *m_audio;
   std::vector<Decoder *> m_decoders;
   decoder_map m_decoder_map;
+  sound_map m_sound_cache;
   bool m_opened;
   struct audio_output_plugin *m_plugin;
   void *m_dl;
@@ -81,12 +88,14 @@ class Audio
 
  private:
   void format_changed();
+  void format_changed(uint32_t rate, uint8_t channels, uint8_t bits);
   static void *play_thread(void *arg);
   void stop();
 
  public:
   Audio();
   ~Audio();
+  void playSound(const char *path);
   bool open(const char *path, const char *artist, const char *album, const char *title, const char *genre, int length=0);
   void close();
   void play();

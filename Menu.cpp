@@ -31,18 +31,48 @@ void Menu::add(MenuItem *menuItem)
 bool Menu::handleEvent(Event &event)
 {
   if (m_current > -1) {
+    Audio *audio = m_app->audio();
     switch (event.key) {
-    case KEY_UP: if (m_current > 0) m_current--; break;
-    case KEY_DOWN: if (m_current < m_size - 1) m_current++; break;
+    case KEY_UP: 
+      if (m_current == 0) 
+        audio->playSound("data/end.pcm"); 
+      else {
+        m_current--; 
+        audio->playSound("data/move.pcm"); 
+      }
+      break;
+    case KEY_DOWN: 
+      if (m_current == m_size - 1)
+        audio->playSound("data/end.pcm"); 
+      else {
+        m_current++; 
+        audio->playSound("data/move.pcm"); 
+      }
+      break;
     case KEY_PAGE_UP: 
-      m_current -= 10; 
-      if (m_current < 0) m_current = 0;
+      m_current -= 10;
+      if (m_current <= 0) {
+        audio->playSound("data/end.pcm"); 
+        m_current = 0;
+      }
+      else
+        audio->playSound("data/move.pcm"); 
       break;
     case KEY_PAGE_DOWN: 
       m_current += 10; 
-      if (m_current > m_size - 1) m_current = m_size - 1;
+      if (m_current >= m_size - 1) {
+        audio->playSound("data/end.pcm"); 
+        m_current = m_size - 1;
+      }
+      else
+        audio->playSound("data/move.pcm"); 
       break;
-    case KEY_ENTER: if (m_current > -1) m_menuItems[m_current]->select(); break;
+    case KEY_ENTER: 
+      if (m_current > -1) {
+        audio->playSound("data/select.pcm"); 
+        m_menuItems[m_current]->select(); 
+      }
+      break;
     }
     debug("current item: %s\n", m_menuItems[m_current]->label());
   }

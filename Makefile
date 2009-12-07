@@ -35,7 +35,7 @@ all: $(SOURCES) $(APP)
 
 $(APP): $(OBJECTS)
 	$(CXX) -Wl,-E $(OBJECTS) -o $@ $(LDFLAGS) 
-	scp -i /Users/vp/nmt/id_rsa_root.openssh nmti root@192.168.1.6:/share/Apps/TankTV
+	scp -i /Users/vp/nmt/id_rsa_root.openssh nmti root@192.168.1.5:/share/Apps/TankTV
 
 .cpp.o:
 	$(CXX) $(CFLAGS) -c $< -o $@
