@@ -48,7 +48,7 @@ void Player::paint()
   if (dirtyBox & Box(0, 0, 560, m_box.h)) {
     r->color(0x0, 0x0, 0x0, 0xff);
     r->rect(0, 0, 1280, 720);
-    r->image(100, 210, "images/unknown_album.png");
+    r->image(100, 210, "data/unknown_album.png");
   }
 
   if (dirtyBox & Box(570, 420, 620, 175)) {
@@ -75,11 +75,11 @@ void Player::paint()
       sprintf(time, "-%d:%02d", a->remaining() / 60, a->remaining() % 60); 
       r->text(1120, 590, time);
     
-      r->image(630, 573, "images/position_bar.png");
+      r->image(630, 573, "data/position_bar.png");
       progress = (int)(465 * ((float)a->elapsed())/(a->elapsed()+a->remaining()));
       r->color(0x80, 0x80, 0x80, 0xff);
       r->rect(633, 576, 6+progress, 10);
-      r->image(633 + progress, 575, "images/position_knob.png", true);
+      r->image(633 + progress, 575, "data/position_knob.png", true);
     }
   }
 

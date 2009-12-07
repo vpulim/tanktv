@@ -156,7 +156,7 @@ void AlbumMusicItem::update()
   /*
   Renderer *r = m_app->renderer();
 
-  r->image(143, 93, "images/unknown_album.png");
+  r->image(143, 93, "data/unknown_album.png");
   r->color(0xff, 0xff, 0xff, 0xff);
   r->font(BOLD_FONT, 18);
   r->text(91, 518, m_album, 504);

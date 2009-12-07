@@ -131,7 +131,7 @@ public:
     Song &song = m_songs[menuItem->index()];
     Renderer *r = m_app->renderer();
     char text[256];
-    r->image(143, 92, "images/unknown_album.png");
+    r->image(143, 92, "data/unknown_album.png");
     r->font(BOLD_FONT, 23);
     r->color(0xff, 0xff, 0xff, 0xff);
     r->text(81, 518, song.title, 504);
@@ -191,7 +191,7 @@ public:
     Album &album = m_albums[menuItem->index()];
     Renderer *r = m_app->renderer();
     char text[256];
-    r->image(143, 92, "images/unknown_album.png");
+    r->image(143, 92, "data/unknown_album.png");
     r->font(BOLD_FONT, 23);
     r->color(0xff, 0xff, 0xff, 0xff);
     r->text(81, 518, album.album, 504);
@@ -248,7 +248,7 @@ public:
   bool paintDetails(MenuItem *menuItem)
   {
     Renderer *r = m_app->renderer();
-    r->image(143, 92, "images/unknown_music.png");
+    r->image(143, 92, "data/unknown_music.png");
   }
 };
 
@@ -280,7 +280,7 @@ public:
   bool paintDetails(MenuItem *menuItem)
   {
     Renderer *r = m_app->renderer();
-    r->image(143, 92, "images/unknown_music.png");
+    r->image(143, 92, "data/unknown_music.png");
   }
 };
 
@@ -308,5 +308,5 @@ void MusicMenu::selectItem(MenuItem *menuItem)
 bool MusicMenu::paintDetails(MenuItem *menuItem)
 {
   Renderer *r = m_app->renderer();
-  r->image(143, 92, "images/unknown_music.png");
+  r->image(143, 92, "data/unknown_music.png");
 }

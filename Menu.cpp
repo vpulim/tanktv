@@ -112,7 +112,7 @@ void Menu::paintBackground(int start, int end, int index, bool eraseOld)
     Renderer *r = m_app->renderer();
 
     if (index == m_current) {
-      r->image(x, y, "images/menuitem_bg.png");  
+      r->image(x, y, "data/menuitem_bg.png");  
     }
     else if (eraseOld) {
       r->color(0, 0, 0, 0xff);
@@ -162,9 +162,9 @@ void Menu::paint()
         mi->move(x, m_top + y);
         mi->paint();      
         if (i-start == 0 && start > 0)
-          r->image(x - 32, m_top - 18, "images/fade_top.png", true);  
+          r->image(x - 32, m_top - 18, "data/fade_top.png", true);  
         if (i-start == 9)
-          r->image(x - 32, m_top + y - 18, "images/fade_bot.png", true);  
+          r->image(x - 32, m_top + y - 18, "data/fade_bot.png", true);  
       }
     }
     else {

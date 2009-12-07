@@ -8,13 +8,13 @@
 
 #ifdef DEBUG
 #define debug printf
-#define BOLD_FONT "fonts/bold_small.ttf"
-#define REGULAR_FONT "fonts/regular_small.ttf"
+#define BOLD_FONT "data/bold_small.ttf"
+#define REGULAR_FONT "data/regular_small.ttf"
 
 #else
 #define debug(x,...)
-#define BOLD_FONT "fonts/bold.ttf"
-#define REGULAR_FONT "fonts/regular.ttf"
+#define BOLD_FONT "data/bold.ttf"
+#define REGULAR_FONT "data/regular.ttf"
 #endif
 
 #endif

@@ -14,29 +14,29 @@ Application::Application(Renderer *renderer, Audio *audio, Database *database)
   r->color(0xcc, 0xcc, 0xcc, 0xff);
   r->font("fonts/regular_small.ttf", 18);
   r->text(640, 420, "loading...", 0, JUSTIFY_CENTER);
-  //  r->image(560, 335, "images/logo.png", true);
+  //  r->image(560, 335, "data/logo.png", true);
   r->flip();  
   /*
-  r->loadImage("images/arrow.png");
-  r->loadImage("images/arrow_on.png");
-  r->loadImage("images/fade_bot.png");
-  r->loadImage("images/fade_top.png");
-  r->loadImage("images/menuitem_bg.png");
-  r->loadImage("images/position_bar.png");
-  r->loadImage("images/position_knob.png");
-  r->loadImage("images/movies.png");
-  r->loadImage("images/tvshows.png");
-  r->loadImage("images/music.png");
-  r->loadImage("images/settings.png");
-  r->loadImage("images/unknown_movie.png");
+  r->loadImage("data/arrow.png");
+  r->loadImage("data/arrow_on.png");
+  r->loadImage("data/fade_bot.png");
+  r->loadImage("data/fade_top.png");
+  r->loadImage("data/menuitem_bg.png");
+  r->loadImage("data/position_bar.png");
+  r->loadImage("data/position_knob.png");
+  r->loadImage("data/movies.png");
+  r->loadImage("data/tvshows.png");
+  r->loadImage("data/music.png");
+  r->loadImage("data/settings.png");
+  r->loadImage("data/unknown_movie.png");
   */
-  r->loadImage("images/unknown_album.png");
+  r->loadImage("data/unknown_album.png");
   r->font(BOLD_FONT, 18);
   r->font(BOLD_FONT, 29);
   r->font(BOLD_FONT, 37);
   r->font(REGULAR_FONT, 23);
   r->font(REGULAR_FONT, 29);
-  m_audio->open("images/start.mp3", "", "", "", "");
+  m_audio->open("data/start.mp3", "", "", "", "");
 
   r->color(0x0, 0x0, 0x0, 0xff);
   r->rect(0, 0, r->width(), r->height());

@@ -81,8 +81,8 @@ void MenuItem::paint()
       r->text(m_screen_x-offset+m_label_width+60, m_screen_y + 35, m_label, MENUITEM_WIDTH+offset, JUSTIFY_LEFT, true);
       r->setClip(&clip);
       if (offset > 0 && offset < m_label_width+30)
-        r->image(m_screen_x-14, m_screen_y, "images/fade_left.png", true);
-      r->image(m_screen_x+MENUITEM_WIDTH-36, m_screen_y, "images/fade_right.png", true);
+        r->image(m_screen_x-14, m_screen_y, "data/fade_left.png", true);
+      r->image(m_screen_x+MENUITEM_WIDTH-36, m_screen_y, "data/fade_right.png", true);
     }
   }
 
@@ -99,7 +99,7 @@ FileItem::FileItem(Menu *menu, File *file)
     m_file(file)
 {
   if (file->isDirectory())
-    setImage("images/arrow_on.png", "images/arrow.png");
+    setImage("data/arrow_on.png", "data/arrow.png");
 }
 
 void FileItem::select()
@@ -131,7 +131,7 @@ void FileItem::select()
 ArrowItem::ArrowItem(Menu *menu, const char *label, const void *data)
   : MenuItem(menu, label, data)
 {
-  setImage("images/arrow_on.png", "images/arrow.png");
+  setImage("data/arrow_on.png", "data/arrow.png");
 }
 
 InfoItem::InfoItem(Menu *menu, const char *label, const char *info)
