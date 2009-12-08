@@ -180,10 +180,7 @@ void Audio::close()
 
 void Audio::playSound(const char *path)
 {
-  debug("in playSound\n");
   if (isPlaying()) return;
-
-  debug("not isPlaying\n");
 
   audio_buffer *buffer = NULL;
   if (m_sound_cache.find(path) == m_sound_cache.end()) {
@@ -200,7 +197,6 @@ void Audio::playSound(const char *path)
 
   buffer = m_sound_cache[path];
   if (buffer) {
-    debug("playing sound: %d\n", buffer->size);
     format_changed(44100, 2, 16);
     m_plugin->play(m_audio, buffer->data, buffer->size, NULL);  
   }

@@ -102,13 +102,13 @@ public:
     char sql[512];
 
     if (album && album->num_artists > 1)
-      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id and album=%Q order by upper(title)", album->album);
+      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id and album=%Q order by upper(title) limit 10000", album->album);
     else if (album && album->genre_id)
-      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id and album_id=%d and genre_id=%d order by upper(title)", album->album_id, album->genre_id);
+      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id and album_id=%d and genre_id=%d order by upper(title) limit 10000", album->album_id, album->genre_id);
     else if (album)
-      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id and album_id=%d order by upper(title)", album->album_id);
+      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id and album_id=%d order by upper(title) limit 10000", album->album_id);
     else
-      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id order by upper(title)");
+      sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id order by upper(title) limit 10000");
     if (db->execute(sql))
       while ((result=db->next())) {
         m_songs.push_back(Song(*result));
@@ -135,7 +135,7 @@ public:
     r->font(BOLD_FONT, 23);
     r->color(0xff, 0xff, 0xff, 0xff);
     r->text(81, 518, song.title, 504);
-    r->color(0x66, 0x66, 0x66, 0xff);
+    r->color(0x99, 0x99, 0x99, 0xff);
     r->font(REGULAR_FONT, 18);    
     r->text(148, 563, "Album:", 0, JUSTIFY_RIGHT);
     r->text(148, 586, "Artist:", 0, JUSTIFY_RIGHT);
@@ -195,7 +195,7 @@ public:
     r->font(BOLD_FONT, 23);
     r->color(0xff, 0xff, 0xff, 0xff);
     r->text(81, 518, album.album, 504);
-    r->color(0x66, 0x66, 0x66, 0xff);
+    r->color(0x99, 0x99, 0x99, 0xff);
     r->font(REGULAR_FONT, 18);    
     r->text(148, 563, "Artist:", 0, JUSTIFY_RIGHT);
     r->text(148, 586, "Genre:", 0, JUSTIFY_RIGHT);

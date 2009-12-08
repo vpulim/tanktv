@@ -64,6 +64,7 @@ class Renderer
   void exit() { m_exit = true; }
   int width() { return m_width; }
   int height() { return m_height; }
+  float getScale() { return m_scale; }
   void loop(EventListener *listener);
   void color(unsigned char r, unsigned char g, unsigned char b, unsigned char alpha);
   int activeBuffer() { return m_curr_buffer; }
@@ -71,8 +72,8 @@ class Renderer
   void getClip(Box *box);
   void rect(int x, int y, int w, int h);
   void line(int x1, int y1, int x2, int y2, bool blend = false);
-  Image *loadImage(const char *path);
-  void image(int x, int y, const char *path, bool blend = false);
+  Image *loadImage(const char *path, float scaleFactor=1.0, const char *prescaled=NULL);
+  void image(int x, int y, const char *path, bool blend = false, float scaleFactor = 1.0);
   void font(const char *path, int size = 32);
   int textWidth(const char *str);
   void text(int x, int y, const char *str, int max_width = 0, FontJustify justify = JUSTIFY_LEFT, bool hardclip = false);

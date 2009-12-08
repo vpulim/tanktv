@@ -27,9 +27,10 @@ class Menu : public Screen
   void paintBackground(int start, int end, int index, bool eraseOld=false);
 
  public:
-  Menu(Application *application, const char *title);
+  Menu(Application *application, const char *title=APP_NAME);
   virtual ~Menu();
   int current() { return m_current; }
+  MenuItem *currentItem() { return m_current > -1 ? m_menuItems[m_current] : NULL; }
   void add(MenuItem *menuItem);
   virtual void selectItem(MenuItem *menuItem);
   virtual void focusItem(MenuItem *menuItem);
@@ -46,6 +47,7 @@ class MainMenu : public Menu
  public:
   MainMenu(Application *application);
   virtual void selectItem(MenuItem *menuItem);
+  virtual void paint();
 };
 
 class FileMenu : public Menu

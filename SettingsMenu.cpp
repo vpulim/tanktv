@@ -34,8 +34,8 @@ class ScanningItem : public InfoItem
 };
 
 SettingsMenu::SettingsMenu(Application *application)
-  : Menu(application, "NMT TV")
+  : Menu(application)
 {  
   new ScanningItem(this);
-  new MenuItem(this, "Dummy");
+  //  new MenuItem(this, "Dummy");
 }

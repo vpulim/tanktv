@@ -9,31 +9,46 @@ Application::Application(Renderer *renderer, Audio *audio, Database *database)
   r->color(0, 0, 0, 0xff);
   r->rect(0, 0, r->width(), r->height());
   r->color(0xff, 0xff, 0xff, 0xff);
-  r->font("fonts/bold_small.ttf", 42);
-  r->text(640, 378, "tankTV", 0, JUSTIFY_CENTER);
+  r->font("data/bold_small.ttf", 42);
+  r->text(640, 378, APP_NAME, 0, JUSTIFY_CENTER);
   r->color(0xcc, 0xcc, 0xcc, 0xff);
-  r->font("fonts/regular_small.ttf", 18);
+  r->font("data/regular_small.ttf", 18);
   r->text(640, 420, "loading...", 0, JUSTIFY_CENTER);
-  //  r->image(560, 335, "data/logo.png", true);
   r->flip();  
-  /*
+  if (r->getScale() == 1.5) {
+    r->loadImage("data/menuitem_bg.png", 1, "data/menuitem_bg_1.5.png");
+    r->loadImage("data/menuitem_bg_fade.png", 1, "data/menuitem_bg_fade_1.5.png");
+  }
+  else {
+    r->loadImage("data/menuitem_bg.png");
+    r->loadImage("data/menuitem_bg_fade.png");
+  }
   r->loadImage("data/arrow.png");
   r->loadImage("data/arrow_on.png");
   r->loadImage("data/fade_bot.png");
   r->loadImage("data/fade_top.png");
-  r->loadImage("data/menuitem_bg.png");
   r->loadImage("data/position_bar.png");
   r->loadImage("data/position_knob.png");
-  r->loadImage("data/movies.png");
+  r->loadImage("data/movies.png", 2.0);
   r->loadImage("data/tvshows.png");
   r->loadImage("data/music.png");
   r->loadImage("data/settings.png");
   r->loadImage("data/unknown_movie.png");
-  */
   r->loadImage("data/unknown_album.png");
+  r->color(0, 0, 0, 0xff);
+  r->rect(0, 0, r->width(), r->height());
+  r->color(0xff, 0xff, 0xff, 0xff);
+  r->font("data/bold_small.ttf", 42);
+  r->text(640, 378, APP_NAME, 0, JUSTIFY_CENTER);
+  r->color(0xcc, 0xcc, 0xcc, 0xff);
+  r->font("data/regular_small.ttf", 18);
+  r->text(640, 420, "initializing...", 0, JUSTIFY_CENTER);
+  r->flip();  
   r->font(BOLD_FONT, 18);
+  r->font(BOLD_FONT, 23);
   r->font(BOLD_FONT, 29);
   r->font(BOLD_FONT, 37);
+  r->font(REGULAR_FONT, 18);
   r->font(REGULAR_FONT, 23);
   r->font(REGULAR_FONT, 29);
   // m_audio->open("data/start.mp3", "", "", "", "");

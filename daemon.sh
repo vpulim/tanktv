@@ -7,40 +7,26 @@ PATH=/bin:/usr/bin
 
 start()
 {
-    if [ -z "`pidof lircd_apple`" ]; then     
-        if [ -n "`pidof lircd`" ]; then     
-            kill -2 `pidof lircd`
-        fi
-        /share/Apps/TankTV/lircd_apple        
-    fi
-
-    if [ -z "`pidof nmti`" ]; then     
+    if [ -z "`pidof tanktv`" ]; then     
         if [ -n "`pidof gaya`" ]; then     
-            kill -2 `pidof gaya`
+            kill -2 `pidof gaya` 2>&1 >/dev/null
         fi
-        LD_LIBRARY_PATH=/share/Apps/TankTV/lib ./nmti --dfb:mode=1280x720 >/tmp/nmti.log 2>&1 &
+        LD_LIBRARY_PATH=/share/Apps/TankTV/lib ./tanktv >/tmp/tanktv.log 2>&1 &
     fi
 }
 
 stop()
 {
-    if [ -z "`pidof lircd`" ]; then     
-        if [ -n "`pidof lircd_apple`" ]; then     
-            kill -2 `pidof lircd_apple` 2>&1 >/dev/null
-        fi
-        /bin/lircd
-    fi
-
-    if [ -n "`pidof nmti`" ]; then
-        kill -2 `pidof nmti` 2>&1 >/dev/null
+    if [ -n "`pidof tanktv`" ]; then
+        kill -2 `pidof tanktv` 2>&1 >/dev/null
     fi
     
     if [ "$?" == "0" ]; then
     waitforclose
     fi
     
-    if [ -n "`pidof nmti`" ]; then
-        kill -9 `pidof nmti` 2>&1 >/dev/null
+    if [ -n "`pidof tanktv`" ]; then
+        kill -9 `pidof tanktv` 2>&1 >/dev/null
     fi
 
     if [ "$?" == "0" ]; then
@@ -55,7 +41,7 @@ stop()
 waitforclose()
 {
     retry=0
-        while [ -n "`pidof nmti`" ] && [ "$retry" -le "10" ] ; do
+        while [ -n "`pidof tanktv`" ] && [ "$retry" -le "10" ] ; do
             retry=$(( $retry + 1 ))
                 sleep 1
     done

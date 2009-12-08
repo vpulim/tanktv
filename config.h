@@ -1,8 +1,10 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define DEBUG 1
-#define NMT 1
+#define DEBUG
+#define NMT
+
+#define APP_NAME "TankTV"
 
 #include <stdio.h>
 

@@ -218,23 +218,28 @@ void Renderer::line(int x1, int y1, int x2, int y2, bool blend)
   if (blend) m_surface->SetDrawingFlags(m_surface, DSDRAW_NOFX);
 }
 
-Image *Renderer::loadImage(const char *path)
+Image *Renderer::loadImage(const char *path, float scaleFactor, const char *prescaled)
 {
   if (!path || !path[0]) return NULL;
 
-  unsigned key = hash(path);
+  unsigned key = hash(path) + (unsigned)(100*scaleFactor);
 
   if (m_image_cache.find(key) == m_image_cache.end()) {
     Image *image = new Image;
     image->surface = NULL;
     image->dsc.preallocated[0].data = NULL;
-
+    
     IDirectFBImageProvider *provider = NULL;
     DFBSurfaceDescription &dsc = image->dsc;
+    if (prescaled) path = prescaled;
     if (m_dfb->CreateImageProvider(m_dfb, path, &provider) == DFB_OK) {
       if (provider->GetSurfaceDescription(provider, &dsc) == DFB_OK) {
-	scale(&(dsc.width));
-	scale(&(dsc.height));
+        if (!prescaled) {
+          dsc.width = (int)(dsc.width * scaleFactor * m_scale);
+          dsc.height = (int)(dsc.height * scaleFactor * m_scale);
+        }
+        dsc.flags = (DFBSurfaceDescriptionFlags)(dsc.flags | DSDESC_CAPS);
+        dsc.caps = (DFBSurfaceCapabilities)(DSCAPS_VIDEOONLY);
 	if ((image->surface = createSurface(&dsc))) {
 	  void *data;
 	  int pitch;
@@ -266,17 +271,18 @@ Image *Renderer::loadImage(const char *path)
   return m_image_cache[key];
 }
 
-void Renderer::image(int x, int y, const char *path, bool blend) 
+void Renderer::image(int x, int y, const char *path, bool blend, float scaleFactor) 
 {
   fflush(stdout);
 
   scale(&x);
   scale(&y);
 
-  Image *image = loadImage(path);
+  Image *image = loadImage(path, scaleFactor);
 
   if (image) {
     if (!image->surface && image->dsc.preallocated[0].data) {
+      image->dsc.caps = DSCAPS_NONE;
       m_dfb->CreateSurface(m_dfb, &image->dsc, &image->surface);
     }
     if (image->surface) {

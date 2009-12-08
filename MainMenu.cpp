@@ -1,7 +1,7 @@
 #include "Menu.h"
 
 MainMenu::MainMenu(Application *application)
-  : Menu(application, "tankTV")
+  : Menu(application)
 {
   m_top = 180;
   new ArrowItem(this, "Movies");
@@ -10,7 +10,7 @@ MainMenu::MainMenu(Application *application)
   new ArrowItem(this, "Downloads");
   new ArrowItem(this, "Files");
   new ArrowItem(this, "Settings");
-  new MenuItem(this, "Exit");
+  //  new MenuItem(this, "Exit");
 }
 
 void MainMenu::selectItem(MenuItem *menuItem)
@@ -30,4 +30,25 @@ void MainMenu::selectItem(MenuItem *menuItem)
     m_app->go(new SettingsMenu(m_app));
   else if (!strcmp(menuItem->label(), "Exit"))
     m_app->exit();
+}
+
+void MainMenu::paint()
+{
+  Menu::paint();
+  Renderer *r = m_app->renderer();
+
+  r->color(0,0,0,0xff);
+  r->rect(150, 150,400,400);
+  if (!strcmp(currentItem()->label(), "Movies"))
+    r->image(150, 150, "data/movies.png", false, 2.0);
+  else if (!strcmp(currentItem()->label(), "TV Shows"))
+    r->image(150, 150, "data/tvshows.png", false, 2.0);
+  else if (!strcmp(currentItem()->label(), "Music"))
+    r->image(150, 150, "data/music.png", false, 2.0);
+  else if (!strcmp(currentItem()->label(), "Downloads"))
+    ;
+  else if (!strcmp(currentItem()->label(), "Files"))
+    ;
+  else if (!strcmp(currentItem()->label(), "Settings"))
+    r->image(150, 150, "data/settings.png", false, 2.0);
 }

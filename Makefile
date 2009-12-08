@@ -2,7 +2,7 @@ ifeq ($(CXX), cc)
 CXX=g++
 endif
 CFLAGS:=$(CFLAGS) `pkg-config directfb freetype2 taglib sqlite3 --cflags`
-LDFLAGS:=$(LDFLAGS) `pkg-config directfb freetype2 taglib sqlite3 --libs` -ldl -lmp4ff -lfaad -lmpg123 -lavformat -lavcodec -lavutil -lz
+LDFLAGS:=$(LDFLAGS) `pkg-config directfb freetype2 taglib sqlite3 --libs` -ldl -lmp4ff -lfaad -lmpg123 -lz
 
 SOURCES = Main.cpp \
 	Utils.cpp \
@@ -12,7 +12,6 @@ SOURCES = Main.cpp \
 	Application.cpp \
 	Database.cpp \
 	Audio.cpp \
-	FFMpegDecoder.cpp \
 	MP3Decoder.cpp \
 	MP4Decoder.cpp \
 	Renderer.cpp \
@@ -29,13 +28,13 @@ SOURCES = Main.cpp \
 	MenuItem.cpp 
 
 OBJECTS = $(SOURCES:.cpp=.o)
-APP = nmti
+APP = tanktv
 
 all: $(SOURCES) $(APP)
 
 $(APP): $(OBJECTS)
 	$(CXX) -Wl,-E $(OBJECTS) -o $@ $(LDFLAGS) 
-	scp -i /Users/vp/nmt/id_rsa_root.openssh nmti root@192.168.1.5:/share/Apps/TankTV
+	scp -i /Users/vp/nmt/id_rsa_root.openssh tanktv root@192.168.1.5:/share/Apps/TankTV
 
 .cpp.o:
 	$(CXX) $(CFLAGS) -c $< -o $@
@@ -51,8 +50,9 @@ depend:
 Application.o: Application.h Event.h config.h Screen.h Widget.h Box.h
 Application.o: Renderer.h ImageLoader.h Thread.h Audio.h Decoder.h Types.h
 Application.o: Database.h
-Audio.o: Audio.h config.h Decoder.h Types.h Utils.h
+Audio.o: Audio.h config.h Decoder.h Types.h File.h Utils.h
 Box.o: Box.h Utils.h
+Curl.o: Curl.h
 Database.o: Database.h config.h Types.h Utils.h File.h
 DownloadsMenu.o: Menu.h Screen.h Widget.h Event.h config.h Box.h
 DownloadsMenu.o: Application.h Renderer.h ImageLoader.h Thread.h Audio.h
@@ -107,3 +107,4 @@ Thread.o: Thread.h
 Utils.o: Utils.h
 Widget.o: Widget.h Event.h config.h Box.h Application.h Screen.h Renderer.h
 Widget.o: ImageLoader.h Thread.h Audio.h Decoder.h Types.h Database.h Utils.h
+Xml.o: Xml.h

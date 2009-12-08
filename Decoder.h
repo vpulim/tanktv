@@ -3,9 +3,11 @@
 
 #include "config.h"
 #include <mpg123.h>
+/*
 extern "C" { 
 #include <libavformat/avformat.h> 
 }
+*/
 #define HAVE_STDINT_H
 #include <mp4ff.h>
 #include <neaacdec.h>
@@ -65,6 +67,7 @@ class MP3Decoder : public Decoder
   virtual const char *genre();  
 };
 
+/*
 class FFMpegDecoder : public Decoder
 {
  private:
@@ -91,6 +94,7 @@ class FFMpegDecoder : public Decoder
   virtual const char *artist();
   virtual const char *genre();  
 };
+*/
 
 class MP4Decoder : public Decoder
 {
