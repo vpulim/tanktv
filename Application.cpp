@@ -1,11 +1,14 @@
 #include "Application.h"
+#include "Curl.h"
 
-Application::Application(Renderer *renderer, Audio *audio, Database *database)
-  : m_renderer(renderer),
-    m_audio(audio),
-    m_db(database)
+Application::Application(int argc, char **argv)
 {
-  Renderer *r = renderer;
+  m_renderer = new Renderer(argc, argv);
+  m_audio = new Audio();
+  m_db = new Database();
+
+  Renderer *r = m_renderer;
+  Curl::init();
   r->color(0, 0, 0, 0xff);
   r->rect(0, 0, r->width(), r->height());
   r->color(0xff, 0xff, 0xff, 0xff);
@@ -58,6 +61,17 @@ Application::Application(Renderer *renderer, Audio *audio, Database *database)
   r->flip();  
   r->rect(0, 0, r->width(), r->height());
   r->flip();    
+}
+
+Application::~Application()
+{
+  delete m_db;
+  delete m_renderer;
+  delete m_audio;  
+  Curl curl;
+  curl.get("http://localhost.drives:8883/HARD_DISK/Apps/TankTV/daemon.cgi?stop");
+  curl.get("http://localhost.drives:8883/SATA_DISK/Apps/TankTV/daemon.cgi?stop");
+  Curl::cleanup();
 }
 
 void Application::setScreen(Screen *screen) 

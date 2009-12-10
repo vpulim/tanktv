@@ -72,6 +72,7 @@ class SettingsMenu : public Menu
 {
  public:
   SettingsMenu(Application *application);
+  virtual void selectItem(MenuItem *menuItem);
 };
 
 #endif

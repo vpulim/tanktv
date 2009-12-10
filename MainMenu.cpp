@@ -10,7 +10,7 @@ MainMenu::MainMenu(Application *application)
   new ArrowItem(this, "Downloads");
   new ArrowItem(this, "Files");
   new ArrowItem(this, "Settings");
-  //  new MenuItem(this, "Exit");
+  new MenuItem(this, "Exit");
 }
 
 void MainMenu::selectItem(MenuItem *menuItem)

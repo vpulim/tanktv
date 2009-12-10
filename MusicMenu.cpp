@@ -101,6 +101,8 @@ public:
     Result *result;
     char sql[512];
 
+    if (album) setLabel(album->album);
+
     if (album && album->num_artists > 1)
       sqlite3_snprintf(sizeof(sql), sql, "select songs.rowid, path, title, artist, album, genre, length from songs, albums, artists, genres where artists.rowid=artist_id and albums.rowid=album_id and genres.rowid=genre_id and album=%Q order by upper(title) limit 10000", album->album);
     else if (album && album->genre_id)
@@ -167,6 +169,8 @@ public:
     Result *result;
     char sql[512];
 
+    if (artist) setLabel(artist->artist);
+    
     if (artist && artist->genre_id) 
       sqlite3_snprintf(sizeof(sql), sql, "select albums.rowid, count(1) as tracks, sum(length) as length, genre, artist, album from genres, albums, artists, songs where genres.rowid=genre_id and artists.rowid=artist_id and albums.rowid=album_id and artist_id=%d and genre_id=%d group by album_id order by upper(album)", artist->artist_id, artist->genre_id);
     else if (artist)
@@ -217,7 +221,6 @@ public:
 class ArtistsMenu : public Menu
 {
 private:
-
   std::vector<class Artist> m_artists;
 
 public:
@@ -228,8 +231,10 @@ public:
     Result *result;
     char sql[256];
 
-    if (genre) 
+    if (genre) {
+      setLabel(genre->genre);
       sqlite3_snprintf(sizeof(sql), sql, "select artists.rowid, artist, genre_id from artists, albums, songs where artists.rowid=artist_id and albums.rowid=album_id and genre_id=%d group by artist_id order by upper(artist)", genre->genre_id);
+    }
     else
       sqlite3_snprintf(sizeof(sql), sql, "select rowid, artist from artists order by upper(artist)");
     if (db->execute(sql))

@@ -38,7 +38,8 @@ class Application : public EventListener
   bool handleIdle();
 
  public: 
-  Application(Renderer *renderer, Audio *audio, Database *database);
+  Application(int argc, char **argv);
+  ~Application();
   void setScreen(Screen *screen);
   void go(Screen *screen);
   void back();

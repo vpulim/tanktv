@@ -33,9 +33,25 @@ class ScanningItem : public InfoItem
   }
 };
 
+class AboutMenu : public Menu
+{
+public:
+  AboutMenu(Application *application) 
+    : Menu(application, "About")
+  {
+    new InfoItem(this, "Software Version", VERSION);
+  }
+};
+
 SettingsMenu::SettingsMenu(Application *application)
-  : Menu(application)
+  : Menu(application, "Settings")
 {  
+  new ArrowItem(this, "About");
   new ScanningItem(this);
-  //  new MenuItem(this, "Dummy");
+}
+
+void SettingsMenu::selectItem(MenuItem *menuItem)
+{
+  if (!strcmp(menuItem->label(), "About"))
+    m_app->go(new AboutMenu(m_app));  
 }
