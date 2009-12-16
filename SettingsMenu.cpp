@@ -31,9 +31,9 @@ class ScanningItem : public InfoItem
 
   virtual void update()
   {
-    if (m_app->database()->isScanning()) {
+    if (m_app->indexer()->isIndexing()) {
       char count[100];
-      sprintf(count, "Files: %d", m_app->database()->scanCount());
+      sprintf(count, "Files: %d", m_app->indexer()->indexCount());
       setInfo(count, "Stop Scan");
     }
     else {
@@ -44,10 +44,10 @@ class ScanningItem : public InfoItem
 
   virtual void select() 
   {
-    if (m_app->database()->isScanning()) 
-      m_app->database()->stopScan();
+    if (m_app->indexer()->isIndexing()) 
+      m_app->indexer()->stop();
     else
-      m_app->database()->startScan();
+      m_app->indexer()->start();
     update();
   }
 };

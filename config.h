@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define VERSION "0.0.1"
+#define VERSION "0.0.2"
 
 #define DEBUG
 #define NMT
@@ -12,8 +12,8 @@
 
 #ifdef DEBUG
 #define debug printf
-#define BOLD_FONT "data/bold_small.ttf"
-#define REGULAR_FONT "data/regular_small.ttf"
+#define BOLD_FONT "data/bold.ttf"
+#define REGULAR_FONT "data/regular.ttf"
 
 #else
 #define debug(x,...)

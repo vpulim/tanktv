@@ -48,11 +48,11 @@ Box operator+ (const Box &first, const Box &second)
 {  
   if (!first.w) return second;
   if (!second.w) return first;
-  int x = min(first.x, second.x);
-  int y = min(first.y, second.y);
+  int x = minimum(first.x, second.x);
+  int y = minimum(first.y, second.y);
   return Box(x, y, 
-             max(first.x + first.w, second.x + second.w) - x,
-             max(first.y + first.h, second.y + second.h) - y);
+             maximum(first.x + first.w, second.x + second.w) - x,
+             maximum(first.y + first.h, second.y + second.h) - y);
 }
 
 bool operator& (const Box &first, const Box &second)
@@ -67,8 +67,8 @@ bool operator& (const Box &first, const Box &second)
 
 void Box::clip(const Box &box) 
 {
-  x = max(x, box.x);
-  y = max(y, box.y);
-  w = max(min(x+w, box.x+box.w) - x, 0);
-  h = max(min(y+h, box.y+box.h) - y, 0);
+  x = maximum(x, box.x);
+  y = maximum(y, box.y);
+  w = maximum(minimum(x+w, box.x+box.w) - x, 0);
+  h = maximum(minimum(y+h, box.y+box.h) - y, 0);
 }

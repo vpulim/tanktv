@@ -18,10 +18,6 @@
 */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <taglib.h>
-#include <tag.h>
-#include <fileref.h>
 #include "Database.h"
 #include "Utils.h"
 #include "File.h"
@@ -29,8 +25,7 @@
 Database::Database(const char *file)
   : m_db(NULL),
     m_result_table(NULL),
-    m_curr_row(0),
-    m_scan_count(0)
+    m_curr_row(0)
 {
   bool newDB = true;
   FILE *f;
@@ -40,7 +35,7 @@ Database::Database(const char *file)
     newDB = false;
   }
   
-  if (sqlite3_open(file, &m_db) != SQLITE_OK) {
+  if (sqlite3_open_v2(file, &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, 0) != SQLITE_OK) {
     sqlite3_close(m_db);
     m_db = NULL;
   }
@@ -106,27 +101,45 @@ void Database::finalize()
 
 int Database::insertArtist(const char *artist)
 {
+  debug("insertArtist: %s\n", artist);
   if (execute("select rowid from artists where artist=%Q", artist)) {
-    return strtol((*next())["rowid"], NULL, 10);
+    debug("returning artist_id\n");
+    Result *r = next();
+    if (r && r->find("rowid") != r->end())
+      return strtol((*r)["rowid"], NULL, 10);
+    return 0;
   }
+  debug("inserting into artists\n");
   execute("insert into artists (artist) values (%Q)", artist);
   return sqlite3_last_insert_rowid(m_db);
 }
 
 int Database::insertGenre(const char *genre)
 {
+  debug("insertGenre: %s\n", genre);
   if (execute("select rowid from genres where genre=%Q", genre)) {
-    return strtol((*next())["rowid"], NULL, 10);
+    debug("returning genre_id\n");
+    Result *r = next();
+    if (r && r->find("rowid") != r->end())
+      return strtol((*r)["rowid"], NULL, 10);
+    return 0;
   }
+  debug("inserting into genres\n");
   execute("insert into genres (genre) values (%Q)", genre);
   return sqlite3_last_insert_rowid(m_db);
 }
 
 int Database::insertAlbum(const char *album, int artist_id)
 {
+  debug("insertAlbum: %s (artist_id=%d)\n", album, artist_id);
   if (execute("select rowid from albums where album=%Q and artist_id=%d", album, artist_id)) {
-    return strtol((*next())["rowid"], NULL, 10);
+    debug("returning album_id\n");
+    Result *r = next();
+    if (r && r->find("rowid") != r->end())
+      return strtol((*r)["rowid"], NULL, 10);
+    return 0;
   }
+  debug("inserting into albums\n");
   execute("insert into albums (album, artist_id) values (%Q, %d)", album, artist_id);
   return sqlite3_last_insert_rowid(m_db);
 }
@@ -139,84 +152,28 @@ int Database::insertSong(const char *path, const char *title, const char *album,
   debug ("artist: %s\n", artist ? artist : "NULL");
   debug ("genre: %s\n", genre ? genre : "NULL");
   int artist_id = insertArtist(artist);
-  int album_id = insertAlbum(album, artist_id);
-  if (execute("select rowid from songs where title=%Q and album_id=%d", title, album_id)) {
-    return strtol((*next())["rowid"], NULL, 10);
+  debug("inserted artist_id=%d\n", artist_id);
+  int album_id;
+  if (artist_id > 0) {
+    album_id = insertAlbum(album, artist_id);
+    debug("inserted album_id=%d\n", album_id);
+  }
+  else
+    return 0;
+  debug("insertSong: %s (album_id=%d)\n", title, album_id);
+  if (album_id > 0 && execute("select rowid from songs where title=%Q and album_id=%d", title, album_id)) {
+    debug("returning song_id\n");
+    Result *r = next();
+    if (r && r->find("rowid") != r->end())
+      return strtol((*r)["rowid"], NULL, 10);
+    return 0;
   }
 
   int genre_id = insertGenre(genre);
+  debug("inserted genre_id=%d\n", genre_id);
+  debug("inserting into songs\n");
   execute("insert into songs (title, album_id, genre_id, length, path) values (%Q, %d, %d, %d, %Q)", title, album_id, genre_id, length, path);
   return sqlite3_last_insert_rowid(m_db);
-}
-
-void Database::startScan()
-{
-  if (!m_scanning) {
-    m_scanning = true;
-    m_scan_count = 0;
-    debug("started scanning\n");
-    pthread_create(&m_thread, NULL, scan_thread, this);
-  }
-}
-
-void Database::stopScan()
-{
-  debug("stopped scanning\n");
-  m_scanning = false;
-  if (m_thread) pthread_join(m_thread, 0);
-  m_thread = 0;
-}
-
-void Database::scan(const char *dir)
-{
-  std::vector<File> files;
-  TagLib::FileRef *f;
-  TagLib::Tag *tag;
-  TagLib::AudioProperties *props;
-  const char *path;
-  char *c;
-  char artist[1024], album[1024], title[1024], genre[256];
-  int length;
-
-  File::listDirectory(dir, files);
-
-  m_scan_count++;
-  for (int i=0; i < files.size() && m_scanning; i++) {    
-    path = files[i].path();
-    if (files[i].isDirectory()) {
-      scan(path);
-    }
-    else if (files[i].isAudio()) {
-      if (!execute("select rowid from songs where path=%Q", files[i].path())) {
-	debug("inserting: %s\n", path);
-	f = new TagLib::FileRef(path);
-	tag = f->tag();
-	if (tag) {
-	  safe_strcpy(artist, tag->artist().isEmpty() ? "Unknown Artist" : tag->artist().to8Bit().c_str());
-	  safe_strcpy(album, tag->album().isEmpty() ? "Unknown Album" : tag->album().to8Bit().c_str());
-	  safe_strcpy(title, tag->title().to8Bit().c_str());
-	  safe_strcpy(genre, tag->genre().isEmpty() ? "Unknown Genre" : tag->genre().to8Bit().c_str());
-	  if (!title[0]) {
-	    safe_strcpy(title, files[i].name());
-	    if ((c = strrchr(title, '.'))) *c=0;
-	  }
-	  length = 0;
-	  if ((props = f->audioProperties()))
-	    length = props->length();
-	  insertSong(path, title, album, artist, genre, length);
-	}
-	delete f;
-      }
-    }
-  }  
-}
-
-void *Database::scan_thread(void *arg)
-{
-  Database *db = (Database *)arg;
-  db->scan("/share/Music");
-  db->m_thread = 0;
-  db->stopScan();
 }
 
 Database::~Database()

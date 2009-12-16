@@ -30,4 +30,11 @@ class Screen : public Widget
   Screen(Application *application);  
 };
 
+class TestScreen : public Screen
+{
+ public:
+  TestScreen(Application *application);
+  virtual void paint();  
+};
+
 #endif

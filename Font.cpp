@@ -144,16 +144,17 @@ int Font::decodeUTF8(const char *bytes, long *ucs, int ucs_max_len)
   
   bytes += num_bytes;
   while(b < (unsigned char *)bytes && num_chars < ucs_max_len) {
-    if(*b<=127) ucs[num_chars++] = *b++;
-    else if(*b<=192) { debug("invalid utf-8 data\n"); b++; }
-    else if(*b<=223) ucs[num_chars++] = ((*b++-192)<<6) + (*b++-128);
-    else if(*b<=239) ucs[num_chars++] = ((*b++-224)<<12) + ((*b++-128)<<6) + (*b++-128);
-    else if(*b<=247) ucs[num_chars++] = ((*b++-240)<<18) + ((*b++-128)<<12) + ((*b++-128)<<6) + (*b++-128);
+    if(*b<=127) ucs[num_chars++] = *b;
+    else if(*b<=192) { printf("invalid utf-8 data\n"); }
+    else if(*b<=223) ucs[num_chars++] = ((*b-192)<<6) + (*++b-128);
+    else if(*b<=239) ucs[num_chars++] = ((*b-224)<<12) + ((*++b-128)<<6) + (*++b-128);
+    else if(*b<=247) ucs[num_chars++] = ((*b-240)<<18) + ((*++b-128)<<12) + ((*++b-128)<<6) + (*++b-128);
     else if(*b<=251) 
-      ucs[num_chars++] = ((*b++-248)<<24) + ((*b++-128)<<18) + ((*b++-128)<<12) + ((*b++-128)<<6) + (*b++-128);
+      ucs[num_chars++] = ((*b-248)<<24) + ((*++b-128)<<18) + ((*++b-128)<<12) + ((*++b-128)<<6) + (*++b-128);
     else if(*b<=253)
-      ucs[num_chars++] = ((*b++-252)<<30) + ((*b++-128)<<24)  + ((*b++-128)<<18) + ((*b++-128)<<12) + ((*b++-128)<<6) + (*b++-128);
-    else { debug("invalid utf-8 data\n"); b++; }
+      ucs[num_chars++] = ((*b-252)<<30) + ((*++b-128)<<24)  + ((*++b-128)<<18) + ((*++b-128)<<12) + ((*++b-128)<<6) + (*++b-128);
+    else { printf("invalid utf-8 data\n"); }
+    b++;
   }  
   return num_chars;
 }
@@ -218,21 +219,23 @@ void Font::draw( int x, int y, const char *text, int max_width, FontJustify just
   DFBRegion clip, textclip;
   int text_width = getWidth(ucs, &num_chars, max_width, hardclip);
 
+  
+
   primary->GetClip(primary, &clip);
   primary->GetClip(primary, &textclip);
 
   switch (justify) {
   case JUSTIFY_LEFT: 
-    textclip.x2 = min(clip.x2, x+text_width-1); 
+    textclip.x2 = minimum(clip.x2, x+text_width-1); 
     break;
   case JUSTIFY_RIGHT: 
-    textclip.x1 = max(clip.x1, x-text_width+1); 
-    textclip.x2 = min(clip.x2, x); 
+    textclip.x1 = maximum(clip.x1, x-text_width+1); 
+    textclip.x2 = minimum(clip.x2, x); 
     x -= text_width; 
     break;
   case JUSTIFY_CENTER: 
-    textclip.x1 = max(clip.x1, x-text_width/2); 
-    textclip.x2 = min(clip.x2, x+text_width/2-1); 
+    textclip.x1 = maximum(clip.x1, x-text_width/2); 
+    textclip.x2 = minimum(clip.x2, x+text_width/2-1); 
     x -= text_width/2; 
     break;
   }

@@ -49,6 +49,7 @@ class Decoder
   virtual const char *name() = 0;
   virtual bool valid() { return false; }
   virtual bool open(const char *file) = 0;
+  virtual bool metadata(const char *file) {};
   virtual void close() = 0;
   virtual int read(unsigned char **buffer) = 0;
   virtual void seek(float percent) {}

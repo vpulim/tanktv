@@ -18,8 +18,8 @@
 ifeq ($(CXX), cc)
 CXX=g++
 endif
-CFLAGS:=$(CFLAGS) `pkg-config directfb freetype2 taglib sqlite3 --cflags`
-LDFLAGS:=$(LDFLAGS) `pkg-config directfb freetype2 taglib sqlite3 --libs` -ldl -lmp4ff -lfaad -lmpg123 -lz -lcurl
+CFLAGS:=$(CFLAGS) `pkg-config directfb taglib freetype2 sqlite3 --cflags`
+LDFLAGS:=$(LDFLAGS) `pkg-config directfb taglib freetype2 sqlite3 --libs` -ldl -lmp4ff -lfaad -lmpg123 -lz -lcurl
 
 SOURCES = Main.cpp \
 	Utils.cpp \
@@ -28,6 +28,7 @@ SOURCES = Main.cpp \
 	File.cpp \
 	Application.cpp \
 	Database.cpp \
+	Indexer.cpp \
 	Audio.cpp \
 	MP3Decoder.cpp \
 	MP4Decoder.cpp \
@@ -38,6 +39,7 @@ SOURCES = Main.cpp \
 	Box.cpp \
 	Widget.cpp \
 	Screen.cpp \
+	TestScreen.cpp \
 	Menu.cpp \
 	MainMenu.cpp \
 	FileMenu.cpp \

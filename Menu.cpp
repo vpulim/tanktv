@@ -98,7 +98,7 @@ bool Menu::handleEvent(Event &event)
   clearDirty();
   setDirtyRegion(Box(MENU_X, m_top, 445, m_box.h - m_top));
   m_idle_count=0;
-  debug("handleEvent\n");
+  debug("done handleEvent\n");
   return true;
 }
 
@@ -145,12 +145,12 @@ void Menu::getVisibleRange(int *start, int *end)
 {
   *start = 0;
   if (m_current > m_size - 5) {
-    *start = max(0, m_size - 9);
+    *start = maximum(0, m_size - 9);
   }
   else if (m_current > 4) {
     *start = m_current - 4;
   }
-  *end = min(m_size-1, *start + 9);
+  *end = minimum(m_size-1, *start + 9);
 }
 
 void Menu::paintBackground(int start, int end, int index, bool eraseOld)
@@ -183,7 +183,8 @@ void Menu::paint()
   if (dirtyBox & Box(0, 0, x-60, m_box.h)) {
     r->color(0, 0, 0, 0xff);
     r->rect(0, 0, x - 60, m_box.h);      
-    paintDetails(m_menuItems[m_current]);
+    if (m_current > -1)
+      paintDetails(m_menuItems[m_current]);
   }
 
   if (dirtyBox & Box(x, 0, 445, m_top)) {

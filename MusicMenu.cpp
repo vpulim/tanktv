@@ -133,7 +133,7 @@ public:
     if (db->execute(sql))
       while ((result=db->next())) {
         m_songs.push_back(Song(*result));
-	new ArrowItem(this, (*result)["title"]);
+        new ArrowItem(this, (*result)["title"]);
       }
   }
 
@@ -206,6 +206,7 @@ public:
   void selectItem(MenuItem *menuItem)
   {
     Album *album = &m_albums[menuItem->index()];
+
     m_app->go(new SongsMenu(m_app, album));        
   }
 

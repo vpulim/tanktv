@@ -25,6 +25,7 @@ Application::Application(int argc, char **argv)
   m_renderer = new Renderer(argc, argv);
   m_audio = new Audio();
   m_db = new Database();
+  m_indexer = new Indexer();
 
   Renderer *r = m_renderer;
   Curl::init();
@@ -84,12 +85,17 @@ Application::Application(int argc, char **argv)
 
 Application::~Application()
 {
+  delete m_indexer;
   delete m_db;
-  delete m_renderer;
   delete m_audio;  
+  delete m_renderer;
+
+#ifndef DEBUG
   Curl curl;
   curl.get("http://localhost.drives:8883/HARD_DISK/Apps/TankTV/daemon.cgi?stop");
   curl.get("http://localhost.drives:8883/SATA_DISK/Apps/TankTV/daemon.cgi?stop");
+#endif
+
   Curl::cleanup();
 }
 

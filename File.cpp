@@ -25,8 +25,6 @@
 #include "File.h"
 #include "Utils.h"
 
-using namespace std;
-
 File::File(const char *name, const char *path, bool isDirectory)
   : m_isdir(isDirectory)
 {
@@ -46,7 +44,7 @@ bool operator< (const File& f, const File& g)
   return strcasecmp(f.name(), g.name()) < 0;
 }
 
-void File::listDirectory(const char *dir, vector<File> &files, bool mediaOnly)
+void File::listDirectory(const char *dir, std::vector<File> &files, bool mediaOnly)
 {
   if (!dir || !dir[0]) return;
   
@@ -122,15 +120,16 @@ bool File::isAudio(const char *ext)
 {
   return !(strcmp(ext, "mp3") &&
 	   strcmp(ext, "m4a") &&
-	   strcmp(ext, "m4p") &&
-	   strcmp(ext, "ogg") &&
-	   strcmp(ext, "flac") &&
-	   strcmp(ext, "wma") &&
-	   strcmp(ext, "wav") &&
-	   strcmp(ext, "oga") &&
-	   strcmp(ext, "m4b") &&
-	   strcmp(ext, "aac") &&
-	   strcmp(ext, "3g2"));
+//	   strcmp(ext, "m4p") &&
+//	   strcmp(ext, "ogg") &&
+//	   strcmp(ext, "flac") &&
+//	   strcmp(ext, "wma") &&
+//	   strcmp(ext, "wav") &&
+//	   strcmp(ext, "oga") &&
+//	   strcmp(ext, "m4b") &&
+//	   strcmp(ext, "aac") &&
+//	   strcmp(ext, "3g2") &&
+           true);
 }
 
 bool File::isVideo(const char *ext)

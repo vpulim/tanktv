@@ -25,6 +25,7 @@
 #include "Renderer.h"
 #include "Audio.h"
 #include "Database.h"
+#include "Indexer.h"
 
 #define MAX_STACK_SIZE 100
 
@@ -50,6 +51,7 @@ class Application : public EventListener
   Renderer *m_renderer;
   Audio *m_audio;
   Database *m_db;
+  Indexer *m_indexer;
   Stack m_stack;
 
  protected:
@@ -67,6 +69,7 @@ class Application : public EventListener
   Renderer *renderer() { return m_renderer; }
   Audio *audio() { return m_audio; }
   Database *database() { return m_db; }
+  Indexer *indexer() { return m_indexer; }
 };
 
 #endif
