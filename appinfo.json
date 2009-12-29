@@ -2,7 +2,7 @@
     enabled="0",
     appinfo_format="1",
     name="TankTV",
-    version="0.0.1",
+    version="0.0.2",
     gayaui_path="#PATH#/gayaui",
     daemon_script="daemon.sh"
 }

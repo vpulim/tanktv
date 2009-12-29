@@ -90,11 +90,9 @@ Application::~Application()
   delete m_audio;  
   delete m_renderer;
 
-#ifndef DEBUG
   Curl curl;
   curl.get("http://localhost.drives:8883/HARD_DISK/Apps/TankTV/daemon.cgi?stop");
   curl.get("http://localhost.drives:8883/SATA_DISK/Apps/TankTV/daemon.cgi?stop");
-#endif
 
   Curl::cleanup();
 }
