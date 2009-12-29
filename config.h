@@ -3,7 +3,7 @@
 
 #define VERSION "0.0.2"
 
-#define DEBUG
+//#define DEBUG
 #define NMT
 
 #define APP_NAME "TankTV"
