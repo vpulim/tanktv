@@ -1,25 +1,43 @@
 #  Copyright (c) 2009 Vinay Pulim
-
+#
 #  This file is part of TankTV.
-
+#
 #  TankTV is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation, either version 3 of the License, or
 #  (at your option) any later version.
-
+#
 #  TankTV is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
+#
 #  You should have received a copy of the GNU General Public License
 #  along with TankTV.  If not, see <http://www.gnu.org/licenses/>.
 
-ifeq ($(CXX), cc)
-CXX=g++
-endif
-CFLAGS:=$(CFLAGS) `pkg-config directfb taglib freetype2 sqlite3 --cflags`
-LDFLAGS:=$(LDFLAGS) `pkg-config directfb taglib freetype2 sqlite3 --libs` -ldl -lmp4ff -lfaad -lmpg123 -lz -lcurl
+CPP = mipsel-linux-gcc
+CXX = mipsel-linux-g++
+LD  = mipsel-linux-ld
+
+# 3rd Party libraries:
+# - faad
+# - mpg123
+# - curl
+# - sqlite3
+# - taglib
+# - zlib
+CFLAGS += -I3rdparty/include
+CFLAGS += -I3rdparty/include/curl
+CFLAGS += -I3rdparty/include/taglib
+LDFLAGS += -L3rdparty/lib -lmp4ff -lfaad -lmpg123 -lcurl -lsqlite3 -ltag -lz
+
+# Freetype 2
+CFLAGS += -I3rdparty/include/freetype2
+LDFLAGS += -lfreetype
+
+# DirectFB
+CFLAGS += -D_REENTRANT -I3rdparty/include/directfb
+LDFLAGS += -ldirect -ldirectfb -lfusion -lpthread -ldl
 
 SOURCES = Main.cpp \
 	Utils.cpp \
@@ -28,7 +46,6 @@ SOURCES = Main.cpp \
 	File.cpp \
 	Application.cpp \
 	Database.cpp \
-	Indexer.cpp \
 	Audio.cpp \
 	MP3Decoder.cpp \
 	MP4Decoder.cpp \
@@ -39,13 +56,13 @@ SOURCES = Main.cpp \
 	Box.cpp \
 	Widget.cpp \
 	Screen.cpp \
-	TestScreen.cpp \
 	Menu.cpp \
 	MainMenu.cpp \
 	FileMenu.cpp \
 	MusicMenu.cpp \
 	SettingsMenu.cpp \
-	MenuItem.cpp 
+	MenuItem.cpp \
+	Indexer.cpp
 
 OBJECTS = $(SOURCES:.cpp=.o)
 APP = tanktv
@@ -54,7 +71,6 @@ all: $(SOURCES) $(APP)
 
 $(APP): $(OBJECTS)
 	$(CXX) -Wl,-E $(OBJECTS) -o $@ $(LDFLAGS) 
-	scp -i /Users/vp/nmt/id_rsa_root.openssh tanktv root@192.168.1.5:/share/Apps/TankTV
 
 .cpp.o:
 	$(CXX) $(CFLAGS) -c $< -o $@
