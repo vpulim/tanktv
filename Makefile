@@ -15,9 +15,9 @@
 #  You should have received a copy of the GNU General Public License
 #  along with TankTV.  If not, see <http://www.gnu.org/licenses/>.
 
-CPP = mipsel-linux-gcc
-CXX = mipsel-linux-g++
-LD  = mipsel-linux-ld
+# CPP = mipsel-linux-gcc
+# CXX = mipsel-linux-g++
+# LD  = mipsel-linux-ld
 
 # 3rd Party libraries:
 # - faad
