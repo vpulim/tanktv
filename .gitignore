@@ -3,3 +3,5 @@
 TankTV*.zip
 TankTV*.tar
 tmp/
+obj/
+Makefile.dep
