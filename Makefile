@@ -15,10 +15,25 @@
 #  You should have received a copy of the GNU General Public License
 #  along with TankTV.  If not, see <http://www.gnu.org/licenses/>.
 
-# CPP = mipsel-linux-gcc
-# CXX = mipsel-linux-g++
-# LD  = mipsel-linux-ld
+#-------------------------------------------------------------------------
+# general definitions
+#-------------------------------------------------------------------------
 
+MAKE		= Makefile
+
+#-------------------------------------------------------------------------
+# command definitions
+#-------------------------------------------------------------------------
+
+CC			= $(TARGET)-gcc
+CXX			= $(TARGET)-g++
+LD			= $(TARGET)-gcc
+AR			= $(TARGET)-ar
+NM			= $(TARGET)-nm
+OBJCOPY		= $(TARGET)-objcopy
+OBJDUMP		= $(TARGET)-objdump
+
+#-------------------------------------------------------------------------
 # 3rd Party libraries:
 # - faad
 # - mpg123
@@ -26,6 +41,8 @@
 # - sqlite3
 # - taglib
 # - zlib
+#-------------------------------------------------------------------------
+
 CFLAGS += -I3rdparty/include
 CFLAGS += -I3rdparty/include/curl
 CFLAGS += -I3rdparty/include/taglib
@@ -38,6 +55,26 @@ LDFLAGS += -lfreetype
 # DirectFB
 CFLAGS += -D_REENTRANT -I3rdparty/include/directfb
 LDFLAGS += -ldirect -ldirectfb -lfusion -lpthread -ldl
+
+#-------------------------------------------------------------------------
+# Application definitions
+#-------------------------------------------------------------------------
+
+CFLAGS	+= -I$(SDIR) -Wall -g -O2
+
+#-------------------------------------------------------------------------
+# directory definitions
+#-------------------------------------------------------------------------
+
+SRC 	= src
+OBJ 	= obj
+DIST 	= dist
+LIB 	= lib
+DIST_LIB = $(DIST)/$(LIB)
+
+#-------------------------------------------------------------------------
+# source file definitions
+#-------------------------------------------------------------------------
 
 SOURCES = Main.cpp \
 	Utils.cpp \
@@ -64,83 +101,59 @@ SOURCES = Main.cpp \
 	MenuItem.cpp \
 	Indexer.cpp
 
-OBJECTS = $(SOURCES:.cpp=.o)
+#-------------------------------------------------------------------------
+# macro definitions
+#-------------------------------------------------------------------------
+
+SRC_FILES	= $(SOURCES:%.cpp=$(SRC)/%.cpp)
+SRC_OBJS	= $(SOURCES:%.cpp=$(OBJ)/%.o)
+
+#-------------------------------------------------------------------------
+# implicit rule definitions
+#-------------------------------------------------------------------------
+
+$(OBJ)/%.o: $(SRC)/%.cpp
+	@echo Compiling $<
+	@$(CXX) $(CFLAGS) -c -o $@ $<
+
 APP = tanktv
 
-all: $(SOURCES) $(APP)
+all: $(OBJ) $(SRC_OBJS) $(APP)
 
-$(APP): $(OBJECTS)
-	$(CXX) -Wl,-E $(OBJECTS) -o $@ $(LDFLAGS) 
+$(APP): $(SRC_OBJS) $(MAKE)
+	@echo Linking $@
+	@$(CXX) -Wl,-E $(SRC_OBJS) -o $@ $(LDFLAGS) 
 
-.cpp.o:
-	$(CXX) $(CFLAGS) -c $< -o $@
+$(SRC_OBJS): $(MAKE)
+
+$(OBJ):
+	echo $(SRC_FILES)
+	mkdir $@
 
 clean:
-	rm -f $(OBJECTS) $(APP) *~
+	@echo Cleaning up...
+	rm -rf $(OBJ)
+	rm -rf $(DIST_LIB)
+	rm -f $(APP) *~
+	@echo OK
 
-depend:
-	makedepend -Y *.cpp 2>/dev/null
+dist: $(APP) $(DIST_LIB)
+	@echo Copying $(APP) to $@...
+	@cp $(APP) $(DIST)
+	@echo OK
 
-# DO NOT DELETE
+$(DIST_LIB):
+	@mkdir $@
+	@echo Copying libs to $@...
+	@cp -R $(LIB) $(DIST)
 
-Application.o: Application.h Event.h config.h Screen.h Widget.h Box.h
-Application.o: Renderer.h ImageLoader.h Thread.h Audio.h Decoder.h Types.h
-Application.o: Database.h
-Audio.o: Audio.h config.h Decoder.h Types.h File.h Utils.h
-Box.o: Box.h Utils.h
-Curl.o: Curl.h
-Database.o: Database.h config.h Types.h Utils.h File.h
-DownloadsMenu.o: Menu.h Screen.h Widget.h Event.h config.h Box.h
-DownloadsMenu.o: Application.h Renderer.h ImageLoader.h Thread.h Audio.h
-DownloadsMenu.o: Decoder.h Types.h Database.h MenuItem.h File.h
-FFMpegDecoder.o: File.h config.h Decoder.h
-File.o: File.h config.h Utils.h
-FileMenu.o: Menu.h Screen.h Widget.h Event.h config.h Box.h Application.h
-FileMenu.o: Renderer.h ImageLoader.h Thread.h Audio.h Decoder.h Types.h
-FileMenu.o: Database.h MenuItem.h File.h Player.h
-Font.o: Font.h config.h Renderer.h Box.h Event.h ImageLoader.h Thread.h
-Font.o: Utils.h
-ImageLoader.o: ImageLoader.h Thread.h
-MP3Decoder.o: Decoder.h config.h
-MP4Decoder.o: Decoder.h config.h
-Main.o: Application.h Event.h config.h Screen.h Widget.h Box.h Renderer.h
-Main.o: ImageLoader.h Thread.h Audio.h Decoder.h Types.h Database.h Menu.h
-Main.o: MenuItem.h File.h
-MainMenu.o: Menu.h Screen.h Widget.h Event.h config.h Box.h Application.h
-MainMenu.o: Renderer.h ImageLoader.h Thread.h Audio.h Decoder.h Types.h
-MainMenu.o: Database.h MenuItem.h File.h
-MediaMenu.o: Menu.h Screen.h Widget.h Event.h config.h Box.h Application.h
-MediaMenu.o: Renderer.h ImageLoader.h Thread.h Audio.h Decoder.h Types.h
-MediaMenu.o: Database.h MenuItem.h File.h
-Menu.o: Menu.h Screen.h Widget.h Event.h config.h Box.h Application.h
-Menu.o: Renderer.h ImageLoader.h Thread.h Audio.h Decoder.h Types.h
-Menu.o: Database.h MenuItem.h File.h Utils.h
-MenuItem.o: MenuItem.h Menu.h Screen.h Widget.h Event.h config.h Box.h
-MenuItem.o: Application.h Renderer.h ImageLoader.h Thread.h Audio.h Decoder.h
-MenuItem.o: Types.h Database.h File.h Player.h Utils.h
-MoviesMenu.o: Menu.h Screen.h Widget.h Event.h config.h Box.h Application.h
-MoviesMenu.o: Renderer.h ImageLoader.h Thread.h Audio.h Decoder.h Types.h
-MoviesMenu.o: Database.h MenuItem.h File.h
-MusicItem.o: Menu.h Screen.h Widget.h Event.h config.h Box.h Application.h
-MusicItem.o: Renderer.h ImageLoader.h Thread.h Audio.h Decoder.h Types.h
-MusicItem.o: Database.h MenuItem.h File.h Player.h Utils.h
-MusicMenu.o: Menu.h Screen.h Widget.h Event.h config.h Box.h Application.h
-MusicMenu.o: Renderer.h ImageLoader.h Thread.h Audio.h Decoder.h Types.h
-MusicMenu.o: Database.h MenuItem.h File.h Player.h Utils.h
-Player.o: Player.h Screen.h Widget.h Event.h config.h Box.h Audio.h Decoder.h
-Player.o: Types.h Application.h Renderer.h ImageLoader.h Thread.h Database.h
-Renderer.o: Renderer.h config.h Box.h Event.h ImageLoader.h Thread.h Font.h
-Renderer.o: Utils.h
-Screen.o: Screen.h Widget.h Event.h config.h Box.h Application.h Renderer.h
-Screen.o: ImageLoader.h Thread.h Audio.h Decoder.h Types.h Database.h
-SettingsMenu.o: Menu.h Screen.h Widget.h Event.h config.h Box.h Application.h
-SettingsMenu.o: Renderer.h ImageLoader.h Thread.h Audio.h Decoder.h Types.h
-SettingsMenu.o: Database.h MenuItem.h File.h
-TVShowsMenu.o: Menu.h Screen.h Widget.h Event.h config.h Box.h Application.h
-TVShowsMenu.o: Renderer.h ImageLoader.h Thread.h Audio.h Decoder.h Types.h
-TVShowsMenu.o: Database.h MenuItem.h File.h
-Thread.o: Thread.h
-Utils.o: Utils.h
-Widget.o: Widget.h Event.h config.h Box.h Application.h Screen.h Renderer.h
-Widget.o: ImageLoader.h Thread.h Audio.h Decoder.h Types.h Database.h Utils.h
-Xml.o: Xml.h
+DEPENDENCIES = $(MAKE).dep
+
+depend: $(DEPENDENCIES)
+$(DEPENDENCIES): $(MAKE) $(SRC_FILES)
+	@echo Generating dependencies
+	@rm -f $(DEPENDENCIES)
+	@$(CXX) $(CFLAGS) -M $(SRC_FILES) | sed '/^[^      ]*:/s/^/'$(OBJ)'\//' >> $(DEPENDENCIES)
+
+include $(DEPENDENCIES)
+
