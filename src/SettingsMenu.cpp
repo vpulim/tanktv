@@ -59,6 +59,7 @@ public:
     : Menu(application, "About")
   {
     new InfoItem(this, "Software Version", VERSION);
+    new InfoItem(this, "Build Date", __DATE__);
   }
 };
 
