@@ -20,6 +20,8 @@
 #-------------------------------------------------------------------------
 
 MAKE		= Makefile
+CTAGS 		= ctags
+CTAGS_FLAGS = -R --c++-kinds=p --fields=+ias --extra=+fq --sort=foldcase
 
 #-------------------------------------------------------------------------
 # command definitions
@@ -55,6 +57,9 @@ LDFLAGS += -lfreetype
 # DirectFB
 CFLAGS += -D_REENTRANT -I3rdparty/include/directfb
 LDFLAGS += -ldirect -ldirectfb -lfusion -lpthread -ldl
+
+# Boost: program options
+LDFLAGS += -lboost_program_options
 
 #-------------------------------------------------------------------------
 # Application definitions
@@ -99,7 +104,8 @@ SOURCES = Main.cpp \
 	MusicMenu.cpp \
 	SettingsMenu.cpp \
 	MenuItem.cpp \
-	Indexer.cpp
+	Indexer.cpp \
+	NMTSettings.cpp
 
 #-------------------------------------------------------------------------
 # macro definitions
@@ -127,8 +133,12 @@ $(APP): $(SRC_OBJS) $(MAKE)
 $(SRC_OBJS): $(MAKE)
 
 $(OBJ):
-	echo $(SRC_FILES)
 	mkdir $@
+
+tags: $(SRC_FILES)
+	@echo Generating tags...
+	@$(CTAGS) $(CTAGS_FLAGS) $(SRC)
+	@echo OK
 
 clean:
 	@echo Cleaning up...

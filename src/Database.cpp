@@ -18,6 +18,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "Database.h"
 #include "Utils.h"
 #include "File.h"

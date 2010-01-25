@@ -22,6 +22,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <ctype.h>
 #include "File.h"
 #include "Utils.h"
 
@@ -100,7 +101,7 @@ const char *File::extension(const char *name, char *dst)
 
 const char *File::extension(const char *name)
 {
-  char *ext = strrchr(name, '.');
+  char *ext = strrchr((char *)name, '.');
   if (ext) return (char *)(ext+1);
   return NULL;
 }

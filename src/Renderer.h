@@ -38,6 +38,7 @@
 #define FONT_BOLD 1
 
 class Font;
+class NMTSettings;
 
 struct Image
 {
@@ -66,16 +67,19 @@ class Renderer
   image_map m_image_cache;
   font_map m_font_cache;
   Font *m_font;
+  int m_videoMode;
 
  private:
   void init();
   void destroy();
   void scale(int *x) { *x = (int)(*x * m_scale); }
   void unscale(int *x) { *x = (int)(*x / m_scale + 0.5); }
+  void setVideoMode(int videoMode);
 
  public:
-  Renderer(int argc, char **argv);
+  Renderer();
   ~Renderer();
+  void initialize(int argc, char **argv, NMTSettings * nmtSettings);
   bool initialized() { return m_initialized; }
   IDirectFBSurface *surface() { return m_surface; }
   IDirectFBSurface *createSurface(DFBSurfaceDescription *dsc);

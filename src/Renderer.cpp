@@ -22,27 +22,24 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <boost/assert.hpp>
 #include "Renderer.h"
 #include "Font.h"
 #include "Utils.h"
+#include "NMTSettings.h"
 
 #define VIRTUAL_WIDTH 1280
 #define VIRTUAL_HEIGHT 720
 
-Renderer::Renderer(int argc, char **argv)
+Renderer::Renderer()
   : m_initialized(false),
     m_exit(false),
     m_image_loader(NULL),
     m_curr_buffer(0),
-    m_scale(1.0)
+    m_scale(1.0),
+    m_videoMode(-1)
 {
   Font::init();
-  if (DirectFBInit(&argc, &argv) != DFB_OK) {
-    fprintf(stderr, "Error in DirectFBInit!\n");
-  }
-  else {
-    init();
-  }
 }
 
 Renderer::~Renderer()
@@ -62,12 +59,31 @@ Renderer::~Renderer()
   Font::finish();
 }
 
+void Renderer::initialize(int argc, char **argv, NMTSettings * nmtSettings)
+{
+  if (DirectFBInit(&argc, &argv) != DFB_OK) {
+    fprintf(stderr, "Error in DirectFBInit!\n");
+  }
+  else {
+    BOOST_ASSERT(nmtSettings != NULL);
+    m_videoMode = nmtSettings->getVideoMode();
+    init();
+  }
+}
+
 void Renderer::init()
 {
   if (m_initialized) return;
 
+  // Set Video mode, if requested.
+  // Must be done before DirectFBCreate()!
+  if (m_videoMode != -1)
+  {
+    setVideoMode(m_videoMode);
+  }
+
   DFBSurfaceDescription dsc;
-  
+
   if (DirectFBCreate(&m_dfb) != DFB_OK) {
     fprintf(stderr, "Error in DirectFBCreate!\n"); return;
   }
@@ -137,6 +153,391 @@ void Renderer::destroy()
   m_initialized = false;
 }
 
+void Renderer::setVideoMode(int videoMode)
+{
+  int full_width;
+  int full_height;
+  char dfb_mode[32];
+	char * dtv_signal = NULL;
+	char * dtv_tv_standard = NULL;
+	char * dtv_connector = NULL;
+	char * component_signal = NULL;
+	char * component_tv_standard = NULL;
+	char * component_connector = NULL;
+	char * analog_signal = NULL;
+	char * analog_tv_standard = NULL;
+	char * analog_connector = NULL;
+
+  debug("Set video mode: %d\n", videoMode);
+
+  switch (videoMode)
+  {
+#if 0
+    case (0):
+    {
+      debug("Mode: Auto\n");
+
+      //! \todo How should this be implemented?
+    }
+    break;
+#endif
+
+    case (1):
+    {
+      debug("Mode: Composite NTSC\n");
+
+      full_width = 720;
+      full_height = 480;
+      analog_signal = "ntsc";
+      analog_tv_standard = "ntsc";
+      analog_connector = "yc";  // or scart ?
+    }
+    break;
+
+    case (2):
+    {
+      debug("Mode: Composite PAL\n");
+
+      full_width = 720;
+      full_height = 576;
+      analog_signal = "pal";
+      analog_tv_standard = "pal";
+      analog_connector = "yc";  // or scart ?
+    }
+    break;
+
+    case (3):
+    {
+      debug("Mode: Component NTSC 480i 60Hz\n");
+
+      full_width = 720;
+      full_height = 480;
+      component_signal = "edtv";  // is 480 ntsc / 576 pal
+      component_tv_standard = "hdtv60";
+      component_connector = "ycrcb";
+    }
+    break;
+
+    case (4):
+    {
+      debug("Mode: Component PAL 576i 50Hz\n");
+
+      full_width = 720;
+      full_height = 576;
+      component_signal = "edtv";  // is 480 ntsc / 576 pal
+      component_tv_standard = "hdtv50";
+      component_connector = "ycrcb";
+    }
+    break;
+
+    case (5):
+    {
+      debug("Mode: Component 480p 60Hz\n");
+
+      full_width = 720;
+      full_height = 480;
+      //! \todo How to force 480p?
+      component_signal = "edtv";
+      component_tv_standard = "hdtv60";
+      component_connector = "ycrcb";
+    }
+    break;
+
+    case (6):
+    {
+      debug("Mode: Component 720p 60Hz\n");
+
+      full_width = 1280;
+      full_height = 720;
+      component_signal = "720p";
+      component_tv_standard = "hdtv60";
+      component_connector = "ycrcb";
+    }
+    break;
+
+    case (7):
+    {
+      debug("Mode: Component 1080p 60Hz\n");
+
+      full_width = 1920;
+      full_height = 1080;
+      component_signal = "1080p";
+      component_tv_standard = "hdtv60";
+      component_connector = "ycrcb";
+    }
+    break;
+
+    case (8):
+    {
+      debug("Mode: Component 1080i 60Hz\n");
+
+      full_width = 1920;
+      full_height = 1080;
+      component_signal = "1080i";
+      component_tv_standard = "hdtv60";
+      component_connector = "ycrcb";
+    }
+    break;
+
+#if 0
+    case (9):
+    {
+      debug("Mode: HDMI 480p 60Hz\n");
+
+      //! \todo Illegal mode?!? Not supported by DFB?
+
+      full_width = 720;
+      full_height = 480;
+    }
+    break;
+#endif
+
+    case (10):
+    {
+      debug("Mode: HDMI 720p 60Hz\n");
+
+      full_width = 1280;
+      full_height = 720;
+      dtv_signal = "720p";
+      dtv_tv_standard = "hdtv60";
+      dtv_connector = "hdmi";
+    }
+    break;
+
+    case (11):
+    {
+      debug("Mode: Component 1080p 24Hz\n");
+
+      full_width = 1920;
+      full_height = 1080;
+      dtv_signal = "1080p24";
+      dtv_tv_standard = "hdtv60"; // should this also be set?
+      dtv_connector = "hdmi";
+    }
+    break;
+
+    case (13):
+    {
+      debug("Mode: Component 720p 50Hz\n");
+
+      full_width = 1280;
+      full_height = 720;
+      component_signal = "720p";
+      component_tv_standard = "hdtv50";
+      component_connector = "ycrcb";
+    }
+    break;
+
+    case (14):
+    {
+      debug("Mode: Component 1080p 50Hz\n");
+
+      full_width = 1920;
+      full_height = 1080;
+      component_signal = "1080p";
+      component_tv_standard = "hdtv50";
+      component_connector = "ycrcb";
+    }
+    break;
+
+    case (15):
+    {
+      debug("Mode: Component 1080i 50Hz\n");
+
+      full_width = 1920;
+      full_height = 1080;
+      component_signal = "1080i";
+      component_tv_standard = "hdtv50";
+      component_connector = "ycrcb";
+    }
+    break;
+
+    case (16):
+    {
+      debug("Mode: HDMI 720p 50Hz\n");
+
+      full_width = 1280;
+      full_height = 720;
+      dtv_signal = "720p";
+      dtv_tv_standard = "hdtv50";
+      dtv_connector = "hdmi";
+    }
+    break;
+
+    case (18):
+    {
+      debug("Mode: HDMI 1080p 50Hz\n");
+
+      full_width = 1920;
+      full_height = 1080;
+      dtv_signal = "1080p";
+      dtv_tv_standard = "hdtv50";
+      dtv_connector = "hdmi";
+    }
+    break;
+
+    case (29):
+    {
+      debug("Mode: HDMI 1080p 60Hz\n");
+
+      full_width = 1920;
+      full_height = 1080;
+      dtv_signal = "1080p";
+      dtv_tv_standard = "hdtv60";
+      dtv_connector = "hdmi";
+    }
+    break;
+
+    case (30):
+    {
+      debug("Mode: Component 576p 50Hz\n");
+
+      full_width = 720;
+      full_height = 576;
+      //! \todo How to force 576p?
+      component_signal = "edtv";
+      component_tv_standard = "hdtv50";
+      component_connector = "ycrcb";
+    }
+    break;
+
+    case (31):
+    {
+      debug("Mode: HDMI 576p 50Hz\n");
+
+      full_width = 720;
+      full_height = 576;
+      //! \todo Should EDID be used to configure special resolutions?
+      dtv_signal = "edid";
+      dtv_tv_standard = "hdtv50";
+      dtv_connector = "hdmi";
+    }
+    break;
+ 
+    case (32):
+    {
+      debug("Mode: HDMI 1080i 60Hz\n");
+
+      full_width = 1920;
+      full_height = 1080;
+      dtv_signal = "1080i";
+      dtv_tv_standard = "hdtv60";
+      dtv_connector = "hdmi";
+    }
+    break;
+
+    default:
+    {
+      fprintf(stderr, "Unsupported video mode: %d!\n", videoMode);
+      return;
+    }
+    break;
+  }
+
+  // Set resolution (mode)
+	snprintf(dfb_mode, sizeof(dfb_mode), "%dx%d", full_width, full_height);
+  if (DirectFBSetOption("mode", dfb_mode) != DFB_OK)
+  {
+    fprintf(stderr, "Error setting mode: %s\n", dfb_mode);
+    return;
+  }
+
+  // Set which signals should be enabled
+  
+  // dtv
+  if (dtv_signal)
+  {
+		if (DirectFBSetOption ("dtv-signal", dtv_signal) != DFB_OK)
+    {
+      fprintf(stderr, "Error setting dtv-signal: %s\n", dtv_signal);
+      return;
+    }
+
+		if (DirectFBSetOption ("dtv-tv-standard", dtv_tv_standard) != DFB_OK)
+    {
+      fprintf(stderr, "Error setting dtv-tv-standard: %s\n", dtv_tv_standard);
+      return;
+    }
+
+		if (DirectFBSetOption ("dtv-connector", dtv_connector) != DFB_OK)
+    {
+      fprintf(stderr, "Error setting dtv-connector: %s\n", dtv_connector);
+      return;
+    }
+  }
+  else
+  {
+    // Disable dtv signal
+		if (DirectFBSetOption ("dtv-signal", "none") != DFB_OK)
+    {
+      fprintf(stderr, "Error disabling dtv-signal\n");
+      return;
+    }
+  }
+
+  // component
+  if (component_signal)
+  {
+		if (DirectFBSetOption ("component-signal", component_signal) != DFB_OK)
+    {
+      fprintf(stderr, "Error setting component-signal: %s\n", component_signal);
+      return;
+    }
+
+		if (DirectFBSetOption ("component-tv-standard", component_tv_standard) != DFB_OK)
+    {
+      fprintf(stderr, "Error setting component-tv-standard: %s\n", component_tv_standard);
+      return;
+    }
+
+		if (DirectFBSetOption ("component-connector", component_connector) != DFB_OK)
+    {
+      fprintf(stderr, "Error setting component-connector: %s\n", component_connector);
+      return;
+    }
+  }
+  else
+  {
+    // Disable component signal
+		if (DirectFBSetOption ("component-signal", "none") != DFB_OK)
+    {
+      fprintf(stderr, "Error disabling component-signal\n");
+      return;
+    }
+  }
+
+  // analog
+  if (analog_signal)
+  {
+		if (DirectFBSetOption ("analog-signal", analog_signal) != DFB_OK)
+    {
+      fprintf(stderr, "Error setting analog-signal: %s\n", analog_signal);
+      return;
+    }
+
+		if (DirectFBSetOption ("analog-tv-standard", analog_tv_standard) != DFB_OK)
+    {
+      fprintf(stderr, "Error setting analog-tv-standard: %s\n", analog_tv_standard);
+      return;
+    }
+
+		if (DirectFBSetOption ("analog-connector", analog_connector) != DFB_OK)
+    {
+      fprintf(stderr, "Error setting analog-connector: %s\n", analog_connector);
+      return;
+    }
+  }
+  else
+  {
+    // Disable component signal
+		if (DirectFBSetOption ("analog-signal", "none") != DFB_OK)
+    {
+      fprintf(stderr, "Error disabling analog-signal\n");
+      return;
+    }
+  }
+}
+
 void Renderer::loop(EventListener *listener)
 {
   DFBInputEvent dfb_event;
@@ -146,14 +547,14 @@ void Renderer::loop(EventListener *listener)
     m_eventBuffer->WaitForEventWithTimeout(m_eventBuffer, 0, 100);
     while (!m_exit && m_eventBuffer->GetEvent (m_eventBuffer, DFB_EVENT(&dfb_event)) == DFB_OK) {
       if (dfb_event.type == DIET_KEYPRESS) {
-	event.type = EVENT_KEYPRESS;
-	event.key = (Key)dfb_event.key_symbol;
-	event.repeat = dfb_event.flags & DIEF_REPEAT;
+        event.type = EVENT_KEYPRESS;
+        event.key = (Key)dfb_event.key_symbol;
+        event.repeat = dfb_event.flags & DIEF_REPEAT;
 #ifdef NMT
-	if (event.key == (Key)DIKS_PAUSE) event.key = (Key)DIKS_PLAY;
+        if (event.key == (Key)DIKS_PAUSE) event.key = (Key)DIKS_PLAY;
 #endif
         debug("got key: 0x%x 0x%x\n", (int)(event.key & 0xFF00), (int)(event.key & 0xFF));
-	if (!listener->handleEvent(event)) m_exit = true;
+        if (!listener->handleEvent(event)) m_exit = true;
       }
     }
     if (!listener->handleIdle()) m_exit = true;

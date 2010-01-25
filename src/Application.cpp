@@ -17,18 +17,45 @@
   along with TankTV.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
+#include <boost/program_options.hpp>
+namespace bpo = boost::program_options;
+
 #include "Application.h"
 #include "Curl.h"
 
-Application::Application(int argc, char **argv)
+using namespace std;
+
+Application::Application()
 {
-  m_renderer = new Renderer(argc, argv);
+  m_nmtSettings = new NMTSettings();
+  m_renderer = new Renderer();
   m_audio = new Audio();
   m_db = new Database();
   m_indexer = new Indexer();
 
-  Renderer *r = m_renderer;
   Curl::init();
+}
+
+Application::~Application()
+{
+  delete m_nmtSettings;
+  delete m_indexer;
+  delete m_db;
+  delete m_audio;  
+  delete m_renderer;
+
+  Curl curl;
+  curl.get("http://localhost.drives:8883/HARD_DISK/Apps/TankTV/daemon.cgi?stop");
+  curl.get("http://localhost.drives:8883/SATA_DISK/Apps/TankTV/daemon.cgi?stop");
+
+  Curl::cleanup();
+}
+
+void Application::startGUI(int argc, char **argv)
+{
+  Renderer *r = m_renderer;
+  r->initialize(argc, argv, m_nmtSettings);
   r->color(0, 0, 0, 0xff);
   r->rect(0, 0, r->width(), r->height());
   r->color(0xff, 0xff, 0xff, 0xff);
@@ -81,20 +108,6 @@ Application::Application(int argc, char **argv)
   r->flip();  
   r->rect(0, 0, r->width(), r->height());
   r->flip();    
-}
-
-Application::~Application()
-{
-  delete m_indexer;
-  delete m_db;
-  delete m_audio;  
-  delete m_renderer;
-
-  Curl curl;
-  curl.get("http://localhost.drives:8883/HARD_DISK/Apps/TankTV/daemon.cgi?stop");
-  curl.get("http://localhost.drives:8883/SATA_DISK/Apps/TankTV/daemon.cgi?stop");
-
-  Curl::cleanup();
 }
 
 void Application::setScreen(Screen *screen) 
@@ -192,6 +205,40 @@ bool Application::handleIdle()
   }
 
   return true;
+}
+
+int Application::parseCommandLine(int argc, char **argv)
+{
+  int status = 1;
+
+  bpo::options_description desc("options");
+  desc.add_options()
+    ("help", "produce help message")
+    ("videomode", bpo::value<int>(), "Set (override default) video mode")
+    ;
+
+  bpo::variables_map vm;
+  bpo::store(bpo::parse_command_line(argc, argv, desc), vm);
+  bpo::notify(vm);
+
+  if (vm.count("help"))
+  {
+    cout << desc << "\n";
+    return 0;
+  }
+
+  if (vm.count("videomode"))
+  {
+    int videoMode = vm["videomode"].as<int>();
+
+    // Override video mode by user input
+    m_nmtSettings->setVideoMode(videoMode);
+
+    cout << "Video mode set to " 
+      << videoMode << ": " << m_nmtSettings->getVideoModeStr() << ".\n";
+  }
+
+  return status;
 }
 
 Stack::Stack()

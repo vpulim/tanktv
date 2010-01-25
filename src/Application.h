@@ -26,6 +26,7 @@
 #include "Audio.h"
 #include "Database.h"
 #include "Indexer.h"
+#include "NMTSettings.h"
 
 #define MAX_STACK_SIZE 100
 
@@ -53,23 +54,27 @@ class Application : public EventListener
   Database *m_db;
   Indexer *m_indexer;
   Stack m_stack;
+  NMTSettings * m_nmtSettings;
 
  protected:
   bool handleEvent(Event &event);
   bool handleIdle();
 
  public: 
-  Application(int argc, char **argv);
+  Application();
   ~Application();
+  void startGUI(int argc, char **argv);
   void setScreen(Screen *screen);
   void go(Screen *screen);
   void back();
   void run();
   void exit();
+  int parseCommandLine(int argc, char **argv);
   Renderer *renderer() { return m_renderer; }
   Audio *audio() { return m_audio; }
   Database *database() { return m_db; }
   Indexer *indexer() { return m_indexer; }
+  NMTSettings * nmtSettings() { return m_nmtSettings; };
 };
 
 #endif

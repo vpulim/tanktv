@@ -21,7 +21,7 @@
 #include "Application.h"
 #include "Menu.h"
 
-Application *application;
+Application * application = NULL;
 
 void sigint_handler(int signal)
 {
@@ -30,11 +30,37 @@ void sigint_handler(int signal)
 
 int main(int argc, char **argv)
 {
-  application = new Application(argc, argv);
-  application->setScreen(new MainMenu(application));
-  signal(SIGINT, sigint_handler);
+  int status;
 
-  application->run();
+  try
+  {
+    fprintf(stdout, "*** %s version %s build at %s\n", APP_NAME, VERSION, __DATE__);
 
-  delete application;
+    application = new Application();
+    signal(SIGINT, sigint_handler);
+
+    // Parse command line options
+    status = application->parseCommandLine(argc, argv);
+    if (status)
+    {
+      application->startGUI(argc, argv);
+      application->setScreen(new MainMenu(application));
+
+      application->run();
+    }
+  }
+  catch (std::exception& e)
+  {
+    fprintf(stderr, "%s\n", e.what());
+  }
+
+  if (NULL != application)
+  {
+    delete application;
+    application = NULL;
+  }
+
+  fprintf(stdout, "*** %s: Exit\n", APP_NAME);
+
+  return status;
 }
